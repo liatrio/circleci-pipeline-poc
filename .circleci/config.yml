@@ -7,15 +7,15 @@ orbs:
   aws-ecr: circleci/aws-ecr@7.0.0
 
 parameters:
-  # account-url:
-  #   type: string
-  #   default: 774051255656.dkr.ecr.us-east-1.amazonaws.com
-  # aws-access-key-id:
-  #   type: string
-  #   default: AWS_ACCESS_KEY_ID
-  # aws-secret-access-key:
-  #   type: string
-  #   default: AWS_SECRET_ACCESS_KEY
+  account-url:
+    type: string
+    default: 774051255656.dkr.ecr.us-east-1.amazonaws.com
+  aws-access-key-id:
+    type: string
+    default: AWS_ACCESS_KEY_ID
+  aws-secret-access-key:
+    type: string
+    default: AWS_SECRET_ACCESS_KEY
   # account-url:
   #   default: AWS_ECR_ACCOUNT_URL
   #   type: env_var_name
@@ -113,7 +113,7 @@ commands:
         description: Whether to skip image building if all specified tags already exist in ECR
         type: boolean
       tag:
-        default: latest
+        default: foo,bar,latest
         description: A comma-separated string containing docker image tags (default = latest)
         type: string
       checkout:
@@ -190,25 +190,11 @@ jobs:
   #         configure-profile-region: true
   #         role-arn: arn:aws:iam::774051255656:role/Developer
   #     - aws-assume-role
-  #     - save_cache:
-  #         key: "{{ .Environment.CIRCLE_SHA1 }}"
-  #         paths: 
-  #           - ~/
 
-  # test-cache:
-  #   executor: aws-cli/default
-  #   steps:
-  #     - checkout
-  #     - restore_cache:
-  #         key: "{{ .Environment.CIRCLE_SHA1 }}"
-  #     - run:
-  #         command: |
-  #           cat ~/.aws/* || true
-  #           aws sts get-caller-identity || true
-  #           aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 774051255656.dkr.ecr.us-east-1.amazonaws.com
-
-  build-docker-image:
+  build-and-push-docker-image:
     executor: aws-ecr/default
+    environment:
+      AWS_ECR_ACCOUNT_URL: 774051255656.dkr.ecr.us-east-1.amazonaws.com
     steps:
       - checkout
       - aws-cli/setup:
@@ -216,15 +202,18 @@ jobs:
           aws-region: AWS_REGION
           configure-default-region: true
           configure-profile-region: true
-          # role-arn: arn:aws:iam::774051255656:role/Developer
+          role-arn: arn:aws:iam::774051255656:role/Developer
       - aws-authentication
-      - build-image:
+      - build-image
+      - push-image:
           repo: calvin
-          tag: foo
+          tag: foo,bar,latest
       # - save_cache:
       #     key: "{{ .Environment.CIRCLE_SHA1 }}"
       #     paths: 
       #       - .
+
+
   push-docker-image:
     executor: aws-ecr/default
     environment:
@@ -254,7 +243,4 @@ jobs:
 workflows:
   build-and-push-to-ecr:
     jobs:
-      - build-docker-image
-      - push-docker-image:
-          requires:
-            - build-docker-image
+      - build-and-push-docker-image
