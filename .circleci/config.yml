@@ -113,7 +113,7 @@ commands:
         description: Whether to skip image building if all specified tags already exist in ECR
         type: boolean
       tag:
-        default: foo,bar,latest
+        default: latest
         description: A comma-separated string containing docker image tags (default = latest)
         type: string
       checkout:
@@ -207,7 +207,7 @@ jobs:
       - build-image
       - push-image:
           repo: calvin
-          tag: foo,bar,latest
+          tag: latest
       # - save_cache:
       #     key: "{{ .Environment.CIRCLE_SHA1 }}"
       #     paths: 
