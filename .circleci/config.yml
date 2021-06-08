@@ -184,11 +184,9 @@ jobs:
     steps:
       - checkout
       - aws-cli/setup:
-          # profile-name: default
-          aws-region: AWS_REGION
+          # aws-region: AWS_REGION
           configure-default-region: true
           configure-profile-region: true
-          # role-arn: arn:aws:iam::774051255656:role/Developer
       # - aws-assume-role
       # - build-image
       # - push-image:
