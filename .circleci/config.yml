@@ -45,12 +45,6 @@ commands:
         type: string
         default: default_session
     steps:
-      - aws-cli/setup:
-          profile-name: default
-          aws-region: AWS_REGION
-          configure-default-region: true
-          configure-profile-region: true
-          # role-arn: arn:aws:iam::774051255656:role/Developer
       - run:
           name: "Assume specified role."
           command: |
@@ -217,6 +211,12 @@ jobs:
     executor: aws-ecr/default
     steps:
       - checkout
+      - aws-cli/setup:
+          profile-name: default
+          aws-region: AWS_REGION
+          configure-default-region: true
+          configure-profile-region: true
+          # role-arn: arn:aws:iam::774051255656:role/Developer
       - aws-authentication
       - build-image:
           repo: calvin
