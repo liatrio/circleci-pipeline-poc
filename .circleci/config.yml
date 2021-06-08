@@ -41,7 +41,7 @@ commands:
       - run:
           name: "Assume Specified Role."
           command: |
-            assumed_role=$(aws sts assume-role --role-arn <<parameters.role-arn>> --role-session-name <<parameters.role-session-name>>)
+            assumed_role=$(aws sts assume-role --role-arn $<<parameters.role-arn>> --role-session-name <<parameters.role-session-name>>)
             aws_access_key_id=$(echo $assumed_role | jq .Credentials.AccessKeyId | xargs)
             aws_secret_access_key=$(echo $assumed_role | jq .Credentials.SecretAccessKey | xargs)
             aws_session_token=$(echo $assumed_role | jq .Credentials.SessionToken | xargs)
@@ -49,7 +49,7 @@ commands:
             export AWS_SECRET_ACCESS_KEY=$aws_secret_access_key
             export AWS_SESSION_TOKEN=$aws_session_token
             aws sts get-caller-identity
-            aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin <<parameters.account-url>>
+            aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin $<<parameters.account-url>>
   build-image:
     parameters:
       account-url:
