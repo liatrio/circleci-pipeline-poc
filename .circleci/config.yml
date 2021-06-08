@@ -36,7 +36,7 @@ parameters:
     type: string
 
 commands:
-  aws-assume-role:
+  aws-authentication:
     parameters:
       role-arn:
         type: string
@@ -45,6 +45,12 @@ commands:
         type: string
         default: default_session
     steps:
+      - aws-cli/setup:
+          profile-name: default
+          aws-region: AWS_REGION
+          configure-default-region: true
+          configure-profile-region: true
+          # role-arn: arn:aws:iam::774051255656:role/Developer
       - run:
           name: "Assume specified role."
           command: |
@@ -178,47 +184,63 @@ commands:
 
 
 jobs:
-  setup-aws-cli:
-    executor: aws-cli/default
+  # setup-aws-cli:
+  #   executor: aws-cli/default
+  #   steps:
+  #     - aws-authentication
+  #     - checkout
+  #     - aws-cli/setup:
+  #         profile-name: default
+  #         aws-region: AWS_REGION
+  #         configure-default-region: true
+  #         configure-profile-region: true
+  #         role-arn: arn:aws:iam::774051255656:role/Developer
+  #     - aws-assume-role
+  #     - save_cache:
+  #         key: "{{ .Environment.CIRCLE_SHA1 }}"
+  #         paths: 
+  #           - ~/
+
+  # test-cache:
+  #   executor: aws-cli/default
+  #   steps:
+  #     - checkout
+  #     - restore_cache:
+  #         key: "{{ .Environment.CIRCLE_SHA1 }}"
+  #     - run:
+  #         command: |
+  #           cat ~/.aws/* || true
+  #           aws sts get-caller-identity || true
+  #           aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 774051255656.dkr.ecr.us-east-1.amazonaws.com
+
+  build-docker-image:
+    executor: aws-ecr/default
     steps:
       - checkout
-      - aws-cli/setup:
-          profile-name: default
-          aws-region: AWS_REGION
-          configure-default-region: true
-          configure-profile-region: true
-          role-arn: arn:aws:iam::774051255656:role/Developer
-      - run:
-          name: "Check creds"
-          command: |
-            cat ~/.aws/* || true
-            cat .aws/* || true
-      - aws-assume-role
-      - run:
-          name: "Check creds again..."
-          command: |
-            cat ~/.aws/* || true
-            cat .aws/* || true
-            aws s3 ls || true
-            
-  authentic-aws-build-and-push-docker-image:
+      - aws-authentication
+      - build-image:
+          repo: calvin
+      # - save_cache:
+      #     key: "{{ .Environment.CIRCLE_SHA1 }}"
+      #     paths: 
+      #       - .
+  push-docker-image:
     executor: aws-ecr/default
     environment:
       AWS_ECR_ACCOUNT_URL: 774051255656.dkr.ecr.us-east-1.amazonaws.com
     steps:
       - checkout
-      - aws-cli/setup:
-          profile-name: default
-          aws-region: AWS_REGION
-          configure-default-region: true
-          configure-profile-region: true
-          role-arn: arn:aws:iam::774051255656:role/Developer
-      - aws-assume-role
-      - build-image:
-          repo: calvin
+      # - restore_cache:
+      #     key: "{{ .Environment.CIRCLE_SHA1 }}"
+      - aws-authentication
+      - run:
+          command: |
+            docker images
       - push-image:
           repo: calvin
-          tag: latest
+          tag: foo
+
+
   # push-docker-image:
   #   executor: aws-ecr/default
   #   environment:
@@ -227,11 +249,11 @@ jobs:
   #         repo: calvin
   #         tag: latest
 
+
 workflows:
   build-and-push-to-ecr:
     jobs:
-      - authentic-aws-build-and-push-docker-image
-      # - setup-aws-cli
-      # - build-and-push-docker-image:
-      #     requires:
-      #       - setup-aws-cli
+      - build-docker-image
+      - push-docker-image:
+          requires:
+            - build-docker-image
