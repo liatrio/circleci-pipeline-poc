@@ -16,24 +16,26 @@ parameters:
   aws-secret-access-key:
     type: string
     default: AWS_SECRET_ACCESS_KEY
-  # account-url:
-  #   default: AWS_ECR_ACCOUNT_URL
-  #   type: env_var_name
+  account-url:
+    default: AWS_ECR_ACCOUNT_URL
+    type: string
   # aws-access-key-id:
   #   default: AWS_ACCESS_KEY_ID
   #   type: env_var_name
   # aws-secret-access-key:
   #   default: AWS_SECRET_ACCESS_KEY
   #   type: env_var_name
+
+  # AWS CLI setup vars
   region:
     type: string
-    default: AWS_REGION
+    default: AWS_DEFAULT_REGION
   role-arn:
     type: string
-    default: arn:aws:iam::774051255656:role/Developer
-  profile-name:
-    default: default
-    type: string
+    default: AWS_ROLE
+  # profile-name:
+  #   default: default
+  #   type: string
 
 commands:
   aws-assume-role:
@@ -102,7 +104,7 @@ commands:
           or ecr-login are set to true.
         type: string
       region:
-        default: AWS_REGION
+        default: AWS_DEFAULT_REGION
         type: env_var_name
       repo:
         description: Name of an Amazon ECR repository
@@ -179,12 +181,11 @@ commands:
 jobs:
   build-and-push-docker-image:
     executor: aws-ecr/default
-    environment:
-      AWS_ECR_ACCOUNT_URL: 774051255656.dkr.ecr.us-east-1.amazonaws.com
+    # environment:
+    #   AWS_ECR_ACCOUNT_URL: 774051255656.dkr.ecr.us-east-1.amazonaws.com
     steps:
       - checkout
       - aws-cli/setup:
-          # aws-region: AWS_REGION
           configure-default-region: true
           configure-profile-region: true
       # - aws-assume-role
