@@ -117,7 +117,7 @@ commands:
         description: A comma-separated string containing docker image tags (default = latest)
         type: string
       checkout:
-        default: true
+        default: false
         type: boolean
     steps:
       - when:
@@ -220,6 +220,7 @@ jobs:
       - aws-authentication
       - build-image:
           repo: calvin
+          tag: foo
       # - save_cache:
       #     key: "{{ .Environment.CIRCLE_SHA1 }}"
       #     paths: 
