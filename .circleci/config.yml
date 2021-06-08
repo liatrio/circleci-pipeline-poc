@@ -36,7 +36,7 @@ parameters:
     type: string
 
 commands:
-  aws-authentication:
+  aws-assume-role:
     parameters:
       role-arn:
         type: string
@@ -176,21 +176,7 @@ commands:
             done
           name: Push image to Amazon ECR
 
-
 jobs:
-  # setup-aws-cli:
-  #   executor: aws-cli/default
-  #   steps:
-  #     - aws-authentication
-  #     - checkout
-  #     - aws-cli/setup:
-  #         profile-name: default
-  #         aws-region: AWS_REGION
-  #         configure-default-region: true
-  #         configure-profile-region: true
-  #         role-arn: arn:aws:iam::774051255656:role/Developer
-  #     - aws-assume-role
-
   build-and-push-docker-image:
     executor: aws-ecr/default
     environment:
@@ -198,47 +184,16 @@ jobs:
     steps:
       - checkout
       - aws-cli/setup:
-          profile-name: default
+          # profile-name: default
           aws-region: AWS_REGION
           configure-default-region: true
           configure-profile-region: true
-          role-arn: arn:aws:iam::774051255656:role/Developer
-      - aws-authentication
-      - build-image
-      - push-image:
-          repo: calvin
-          tag: latest
-      # - save_cache:
-      #     key: "{{ .Environment.CIRCLE_SHA1 }}"
-      #     paths: 
-      #       - .
-
-
-  push-docker-image:
-    executor: aws-ecr/default
-    environment:
-      AWS_ECR_ACCOUNT_URL: 774051255656.dkr.ecr.us-east-1.amazonaws.com
-    steps:
-      - checkout
-      # - restore_cache:
-      #     key: "{{ .Environment.CIRCLE_SHA1 }}"
-      - aws-authentication
-      - run:
-          command: |
-            docker images
-      - push-image:
-          repo: calvin
-          tag: foo
-
-
-  # push-docker-image:
-  #   executor: aws-ecr/default
-  #   environment:
-  #     AWS_ECR_ACCOUNT_URL: 774051255656.dkr.ecr.us-east-1.amazonaws.com
-  #     - push-image:
-  #         repo: calvin
-  #         tag: latest
-
+          # role-arn: arn:aws:iam::774051255656:role/Developer
+      # - aws-assume-role
+      # - build-image
+      # - push-image:
+      #     repo: calvin
+      #     tag: latest
 
 workflows:
   build-and-push-to-ecr:
