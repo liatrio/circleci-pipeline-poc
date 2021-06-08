@@ -7,9 +7,6 @@ orbs:
   aws-ecr: circleci/aws-ecr@7.0.0
 
 parameters:
-  # account-url:
-  #   type: string
-  #   default: 774051255656.dkr.ecr.us-east-1.amazonaws.com
   aws-access-key-id:
     type: string
     default: AWS_ACCESS_KEY_ID
@@ -19,12 +16,6 @@ parameters:
   account-url:
     default: AWS_ECR_ACCOUNT_URL
     type: string
-  # aws-access-key-id:
-  #   default: AWS_ACCESS_KEY_ID
-  #   type: env_var_name
-  # aws-secret-access-key:
-  #   default: AWS_SECRET_ACCESS_KEY
-  #   type: env_var_name
 
   # AWS CLI setup vars
   region:
@@ -33,22 +24,19 @@ parameters:
   role-arn:
     type: string
     default: AWS_ROLE
-  # profile-name:
-  #   default: default
-  #   type: string
 
 commands:
   aws-assume-role:
     parameters:
       role-arn:
-        type: string
-        default: arn:aws:iam::774051255656:role/Developer
+        default: AWS_ROLE
+        type: env_var_name
       role-session-name:
-        type: string
         default: default_session
+        type: string
     steps:
       - run:
-          name: "Assume specified role."
+          name: "Assume Specified Role."
           command: |
             assumed_role=$(aws sts assume-role --role-arn <<parameters.role-arn>> --role-session-name <<parameters.role-session-name>>)
             aws_access_key_id=$(echo $assumed_role | jq .Credentials.AccessKeyId | xargs)
@@ -181,8 +169,6 @@ commands:
 jobs:
   build-and-push-docker-image:
     executor: aws-ecr/default
-    # environment:
-    #   AWS_ECR_ACCOUNT_URL: 774051255656.dkr.ecr.us-east-1.amazonaws.com
     steps:
       - checkout
       - aws-cli/setup:
