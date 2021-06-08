@@ -188,11 +188,11 @@ jobs:
       - aws-cli/setup:
           configure-default-region: true
           configure-profile-region: true
-      # - aws-assume-role
-      # - build-image
-      # - push-image:
-      #     repo: calvin
-      #     tag: latest
+      - aws-assume-role
+      - build-image
+      - push-image:
+          repo: calvin
+          tag: latest
 
 workflows:
   build-and-push-to-ecr:
