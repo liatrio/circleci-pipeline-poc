@@ -7,9 +7,9 @@ orbs:
   aws-ecr: circleci/aws-ecr@7.0.0
 
 parameters:
-  account-url:
-    type: string
-    default: 774051255656.dkr.ecr.us-east-1.amazonaws.com
+  # account-url:
+  #   type: string
+  #   default: 774051255656.dkr.ecr.us-east-1.amazonaws.com
   aws-access-key-id:
     type: string
     default: AWS_ACCESS_KEY_ID
