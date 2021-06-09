@@ -16,7 +16,6 @@ parameters:
   account-url:
     default: AWS_ECR_ACCOUNT_URL
     type: string
-
   # AWS CLI setup vars
   region:
     type: string
@@ -24,7 +23,6 @@ parameters:
   role-arn:
     type: string
     default: AWS_ASSUME_ROLE
-
 # Docker Build 
   repo:
     default: calvin
@@ -40,8 +38,11 @@ commands:
         default: AWS_ASSUME_ROLE
         type: env_var_name
       role-session-name:
-        default: default_session
+        default: default
         type: string
+      aws-region:
+        default: AWS_DEFAULT_REGION
+        type: env_var_name
     steps:
       - run:
           name: "Assume Specified Role."
@@ -54,7 +55,7 @@ commands:
             export AWS_SECRET_ACCESS_KEY=$aws_secret_access_key
             export AWS_SESSION_TOKEN=$aws_session_token
             aws sts get-caller-identity
-            aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin $<<parameters.account-url>>
+            aws ecr get-login-password --region $<<parameters.aws-region>> | docker login --username AWS --password-stdin $<<parameters.account-url>>
   build-image:
     parameters:
       checkout:
@@ -82,14 +83,7 @@ commands:
         type: string
       dockerfile:
         default: Dockerfile
-        description: Name of dockerfile to use. Defaults to Dockerfile.
         type: string
-      ecr-login:
-        default: true
-        description: >
-          Boolean for whether or not to log in to ECR before building. Default is
-          false.
-        type: boolean
       extra-build-args:
         default: ''
         type: string
