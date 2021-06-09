@@ -91,6 +91,7 @@ commands:
         type: env_var_name
       repo:
         type: string
+      # This won't work with role being passed in as a variable
       skip-when-tags-exist:
         default: false
         description: Whether to skip image building if all specified tags already exist in ECR
@@ -161,9 +162,6 @@ commands:
 jobs:
   build-and-push-docker-image:
     executor: aws-ecr/default
-    # parameters:
-    #   tag: foo
-    #   repo: brendon
     steps:
       - checkout
       - aws-cli/setup:
@@ -176,10 +174,10 @@ jobs:
             cat ~/.aws/*
       - build-image:
           repo: calvin
-          tag: latest
+          tag: latest,${CIRCLE_SHA1}
       - push-image:
           repo: calvin
-          tag: latest
+          tag: latest,${CIRCLE_SHA1}
 
 workflows:
   build-and-push-to-ecr:
