@@ -183,15 +183,13 @@ jobs:
       - push-image:
           repo: calvin
           tag: latest,${CIRCLE_SHA1}
-  gradle-test-app:
-    executor: gradle-test
-    steps:
-      - gradle/test:
-          cache_checksum_file: build.gradle.kts
-          reports_path: build/reports/
-          test_results_path: build/test-results/
+
 workflows:
   kotlin-application:
     jobs:
-      - gradle-test-app
+      - gradle/test:
+          executor: gradle-test
+          cache_checksum_file: build.gradle.kts
+          reports_path: build/reports/
+          test_results_path: build/test-results/
       # - build-push-docker-image
