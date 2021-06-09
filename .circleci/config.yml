@@ -171,6 +171,7 @@ jobs:
       - aws-assume-role
       - build-image:
           repo: calvin
+          skip-when-tags-exist: true
       # - push-image:
       #     repo: calvin
       #     tag: latest
