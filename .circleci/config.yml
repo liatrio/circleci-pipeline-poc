@@ -35,8 +35,11 @@ commands:
         default: AWS_ASSUME_ROLE
         type: env_var_name
       role-session-name:
-        default: default_session
+        default: default
         type: string
+      aws-region:
+        default: AWS_DEFAULT_REGION
+        type: env_var_name
     steps:
       - run:
           name: "Assume Specified Role."
@@ -49,7 +52,31 @@ commands:
             export AWS_SECRET_ACCESS_KEY=$aws_secret_access_key
             export AWS_SESSION_TOKEN=$aws_session_token
             aws sts get-caller-identity
-            aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin $<<parameters.account-url>>
+            aws ecr get-login-password --region $<<parameters.aws-region>> | docker login --username AWS --password-stdin $<<parameters.account-url>>
+  # aws-assume-role:
+  #   parameters:
+  #     account-url:
+  #       default: AWS_ECR_ACCOUNT_URL
+  #       type: env_var_name
+  #     role-arn:
+  #       default: AWS_ASSUME_ROLE
+  #       type: env_var_name
+  #     role-session-name:
+  #       default: default_session
+  #       type: string
+  #   steps:
+  #     - run:
+  #         name: "Assume Specified Role."
+  #         command: |
+  #           assumed_role=$(aws sts assume-role --role-arn $<<parameters.role-arn>> --role-session-name <<parameters.role-session-name>>)
+  #           aws_access_key_id=$(echo $assumed_role | jq .Credentials.AccessKeyId | xargs)
+  #           aws_secret_access_key=$(echo $assumed_role | jq .Credentials.SecretAccessKey | xargs)
+  #           aws_session_token=$(echo $assumed_role | jq .Credentials.SessionToken | xargs)
+  #           export AWS_ACCESS_KEY_ID=$aws_access_key_id
+  #           export AWS_SECRET_ACCESS_KEY=$aws_secret_access_key
+  #           export AWS_SESSION_TOKEN=$aws_session_token
+  #           aws sts get-caller-identity
+  #           aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin $<<parameters.account-url>>
   build-image:
     parameters:
       account-url:
@@ -178,31 +205,7 @@ workflows:
     jobs:
       - build-and-push-docker-image
 
-# version: 2.1
-# description: |
-#   Build a Docker application and push to an ECR repository.
 
-# orbs:
-#   aws-cli: circleci/aws-cli@2.0.2
-#   aws-ecr: circleci/aws-ecr@7.0.0
-
-# parameters:
-#   aws-access-key-id:
-#     type: string
-#     default: AWS_ACCESS_KEY_ID
-#   aws-secret-access-key:
-#     type: string
-#     default: AWS_SECRET_ACCESS_KEY
-#   account-url:
-#     default: AWS_ECR_ACCOUNT_URL
-#     type: string
-#   # AWS CLI setup vars
-#   region:
-#     type: string
-#     default: AWS_DEFAULT_REGION
-#   role-arn:
-#     type: string
-#     default: AWS_ASSUME_ROLE
 # # Docker Build 
 #   repo:
 #     default: calvin
@@ -355,8 +358,3 @@ workflows:
 #       # - push-image:
 #       #     repo: calvin
 #       #     tag: latest
-
-# workflows:
-#   build-and-push-to-ecr:
-#     jobs:
-#       - build-and-push-docker-image
