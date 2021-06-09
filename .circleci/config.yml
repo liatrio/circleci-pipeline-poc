@@ -2,6 +2,15 @@ version: 2.1
 description: |
   Build a Docker application and push to an ECR repository.
 
+executors:
+  gradle-test:
+    docker:
+      - image: 'cimg/openjdk:<<parameters.tag>>'
+    parameters:
+      tag:
+        default: '8.0'
+        type: string
+
 orbs:
   gradle: circleci/gradle@2.2.0
   aws-cli: circleci/aws-cli@2.0.2
@@ -174,16 +183,15 @@ jobs:
       - push-image:
           repo: calvin
           tag: latest,${CIRCLE_SHA1}
-  gradle-test:
-    executor: gradle/default
-      tag: '8.0'
+  gradle-test-app:
+    executor: gradle-test
     steps:
       - gradle/test:
           cache_checksum_file: build.gradle.kts
           reports_path: build/reports/
           test_results_path: build/test-results/
 workflows:
-  kotlin-applications:
+  kotlin-application:
     jobs:
-      - gradle-test
+      - gradle-test-app
       # - build-push-docker-image
