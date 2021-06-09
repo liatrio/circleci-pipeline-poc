@@ -22,7 +22,7 @@ parameters:
     default: AWS_DEFAULT_REGION
   role-arn:
     type: string
-    default: AWS_ASSUME_ROLE
+    default: $AWS_ASSUME_ROLE
 
 commands:
   aws-assume-role:
@@ -166,7 +166,7 @@ jobs:
     steps:
       - checkout
       - aws-cli/setup:
-          role-arn: AWS_ASSUME_ROLE
+          role-arn: $AWS_ASSUME_ROLE
           configure-default-region: true
           configure-profile-region: true
       - aws-assume-role
