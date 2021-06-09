@@ -115,7 +115,6 @@ commands:
 
             number_of_tags_in_ecr=0
 
-
             docker_tag_args=""
 
             IFS="," read -ra DOCKER_TAGS \<<< "<< parameters.tag >>"
@@ -128,7 +127,7 @@ commands:
                   let "number_of_tags_in_ecr+=1"
                 fi
               fi
-              docker_tag_args="$docker_tag_args -t $<<parameters.account-url>>/<<parameters.repo>>:$tag"
+              docker_tag_args="$docker_tag_args -t $<<parameters.account-url>>/$<<parameters.repo>>:$tag"
             done
 
             if [ "<<parameters.skip-when-tags-exist>>" = "false" ] || [
