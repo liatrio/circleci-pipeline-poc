@@ -15,6 +15,9 @@ orbs:
   gradle: circleci/gradle@2.2.0
   aws-cli: circleci/aws-cli@2.0.2
   aws-ecr: circleci/aws-ecr@7.0.0
+  aws-eks: circleci/aws-eks@1.1.0
+  kubernetes: circleci/kubernetes@0.4.0
+  helm: circleci/helm@1.2.0
 
 parameters:
   aws-access-key-id:
@@ -61,6 +64,7 @@ commands:
             export AWS_SESSION_TOKEN=$aws_session_token
             aws sts get-caller-identity
             aws ecr get-login-password --region $<<parameters.aws-region>> | docker login --username AWS --password-stdin $<<parameters.account-url>>
+            aws eks update-kubeconfig --name circleci-pipeline-poc
   build-image:
     parameters:
       account-url:
@@ -168,6 +172,8 @@ commands:
             done
           name: Push Image to Amazon ECR
 
+
+
 jobs:
   build-push-docker-image:
     executor: aws-ecr/default
@@ -184,6 +190,21 @@ jobs:
           repo: connor-circleci
           tag: latest,${CIRCLE_SHA1}
 
+  deploy-helm-chart:
+    executor: helm-executor
+    steps:
+      - checkout
+      - aws-assume-role
+      - aws-eks/update-kubeconfig-with-authenticator:
+          aws-region: us-east-1
+          cluster-authentication-role-arn: AWS_ASSUME_ROLE
+          cluster-name: circleci-pipeline-poc
+      - helm/install-helm-chart:
+          chart: ./spring-boot-kotlin
+          namespace: default
+          release-name: spring-boot-kotlin
+          wait: true
+
 workflows:
   kotlin-application:
     jobs:
@@ -195,3 +216,6 @@ workflows:
       - build-push-docker-image:
           requires:
             - gradle/test
+      - deploy-helm-chart:
+          requires:
+            - build-push-docker-image
