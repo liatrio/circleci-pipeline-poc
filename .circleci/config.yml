@@ -16,6 +16,7 @@ parameters:
   account-url:
     default: AWS_ECR_ACCOUNT_URL
     type: string
+
   # AWS CLI setup vars
   region:
     type: string
@@ -23,10 +24,6 @@ parameters:
   role-arn:
     type: string
     default: AWS_ASSUME_ROLE
-# Docker Build 
-  repo:
-    default: calvin
-    type: string
 
 commands:
   aws-assume-role:
@@ -38,11 +35,8 @@ commands:
         default: AWS_ASSUME_ROLE
         type: env_var_name
       role-session-name:
-        default: default
+        default: default_session
         type: string
-      aws-region:
-        default: AWS_DEFAULT_REGION
-        type: env_var_name
     steps:
       - run:
           name: "Assume Specified Role."
@@ -55,12 +49,9 @@ commands:
             export AWS_SECRET_ACCESS_KEY=$aws_secret_access_key
             export AWS_SESSION_TOKEN=$aws_session_token
             aws sts get-caller-identity
-            aws ecr get-login-password --region $<<parameters.aws-region>> | docker login --username AWS --password-stdin $<<parameters.account-url>>
+            aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin $<<parameters.account-url>>
   build-image:
     parameters:
-      checkout:
-        default: false
-        type: boolean
       account-url:
         default: AWS_ECR_ACCOUNT_URL
         type: env_var_name
@@ -70,32 +61,16 @@ commands:
       aws-secret-access-key:
         default: AWS_SECRET_ACCESS_KEY
         type: env_var_name
+      dockerfile:
+        default: Dockerfile
+        description: Name of dockerfile to use. Defaults to Dockerfile.
+        type: string
       ecr-login:
         default: true
         description: >
           Boolean for whether or not to log in to ECR before building. Default is
           false.
         type: boolean
-      tag:
-        default: latest
-        description: A comma-separated string containing docker image tags (default = latest)
-        type: string
-      skip-when-tags-exist:
-        default: false
-        description: Whether to skip image building if all specified tags already exist in ECR
-        type: boolean
-      profile-name:
-        default: default
-        type: string
-      repo:
-        default: default
-        type: string
-      path:
-        default: .
-        type: string
-      dockerfile:
-        default: Dockerfile
-        type: string
       extra-build-args:
         default: ''
         type: string
@@ -103,6 +78,30 @@ commands:
         default: 10m
         description: The amount of time to allow the docker command to run before timing out.
         type: string
+      path:
+        default: .
+        type: string
+      profile-name:
+        default: default
+        type: string
+      region:
+        default: AWS_DEFAULT_REGION
+        type: env_var_name
+      repo:
+        description: Name of an Amazon ECR repository
+        default: calvin
+        type: string
+      skip-when-tags-exist:
+        default: false
+        description: Whether to skip image building if all specified tags already exist in ECR
+        type: boolean
+      tag:
+        default: latest
+        description: A comma-separated string containing docker image tags (default = latest)
+        type: string
+      checkout:
+        default: false
+        type: boolean
     steps:
       - when:
           condition: <<parameters.checkout>>
@@ -123,11 +122,11 @@ commands:
               if [ "<<parameters.skip-when-tags-exist>>" = "true" ]; then
                 docker_tag_exists_in_ecr=$(aws ecr describe-images --profile <<parameters.profile-name>> --registry-id $registry_id --repository-name <<parameters.repo>> --query "contains(imageDetails[].imageTags[], '$tag')")
                 if [ "$docker_tag_exists_in_ecr" = "true" ]; then
-                  docker pull $<<parameters.account-url>>/$<<parameters.repo>>:${tag}
+                  docker pull $<<parameters.account-url>>/<<parameters.repo>>:${tag}
                   let "number_of_tags_in_ecr+=1"
                 fi
               fi
-              docker_tag_args="$docker_tag_args -t $<<parameters.account-url>>/$<<parameters.repo>>:$tag"
+              docker_tag_args="$docker_tag_args -t $<<parameters.account-url>>/<<parameters.repo>>:$tag"
             done
 
             if [ "<<parameters.skip-when-tags-exist>>" = "false" ] || [
@@ -169,14 +168,195 @@ jobs:
           configure-default-region: true
           configure-profile-region: true
       - aws-assume-role
-      - build-image:
-          skip-when-tags-exist: true
+      - build-image
+      - push-image:
           repo: calvin
-      # - push-image:
-      #     repo: calvin
-      #     tag: latest
+          tag: latest
 
 workflows:
   build-and-push-to-ecr:
     jobs:
       - build-and-push-docker-image
+
+# version: 2.1
+# description: |
+#   Build a Docker application and push to an ECR repository.
+
+# orbs:
+#   aws-cli: circleci/aws-cli@2.0.2
+#   aws-ecr: circleci/aws-ecr@7.0.0
+
+# parameters:
+#   aws-access-key-id:
+#     type: string
+#     default: AWS_ACCESS_KEY_ID
+#   aws-secret-access-key:
+#     type: string
+#     default: AWS_SECRET_ACCESS_KEY
+#   account-url:
+#     default: AWS_ECR_ACCOUNT_URL
+#     type: string
+#   # AWS CLI setup vars
+#   region:
+#     type: string
+#     default: AWS_DEFAULT_REGION
+#   role-arn:
+#     type: string
+#     default: AWS_ASSUME_ROLE
+# # Docker Build 
+#   repo:
+#     default: calvin
+#     type: string
+
+# commands:
+#   aws-assume-role:
+#     parameters:
+#       account-url:
+#         default: AWS_ECR_ACCOUNT_URL
+#         type: env_var_name
+#       role-arn:
+#         default: AWS_ASSUME_ROLE
+#         type: env_var_name
+#       role-session-name:
+#         default: default
+#         type: string
+#       aws-region:
+#         default: AWS_DEFAULT_REGION
+#         type: env_var_name
+#     steps:
+#       - run:
+#           name: "Assume Specified Role."
+#           command: |
+#             assumed_role=$(aws sts assume-role --role-arn $<<parameters.role-arn>> --role-session-name <<parameters.role-session-name>>)
+#             aws_access_key_id=$(echo $assumed_role | jq .Credentials.AccessKeyId | xargs)
+#             aws_secret_access_key=$(echo $assumed_role | jq .Credentials.SecretAccessKey | xargs)
+#             aws_session_token=$(echo $assumed_role | jq .Credentials.SessionToken | xargs)
+#             export AWS_ACCESS_KEY_ID=$aws_access_key_id
+#             export AWS_SECRET_ACCESS_KEY=$aws_secret_access_key
+#             export AWS_SESSION_TOKEN=$aws_session_token
+#             aws sts get-caller-identity
+#             aws ecr get-login-password --region $<<parameters.aws-region>> | docker login --username AWS --password-stdin $<<parameters.account-url>>
+#   build-image:
+#     parameters:
+#       checkout:
+#         default: false
+#         type: boolean
+#       account-url:
+#         default: AWS_ECR_ACCOUNT_URL
+#         type: env_var_name
+#       aws-access-key-id:
+#         default: AWS_ACCESS_KEY_ID
+#         type: env_var_name
+#       aws-secret-access-key:
+#         default: AWS_SECRET_ACCESS_KEY
+#         type: env_var_name
+#       ecr-login:
+#         default: true
+#         description: >
+#           Boolean for whether or not to log in to ECR before building. Default is
+#           false.
+#         type: boolean
+#       tag:
+#         default: latest
+#         description: A comma-separated string containing docker image tags (default = latest)
+#         type: string
+#       skip-when-tags-exist:
+#         default: false
+#         description: Whether to skip image building if all specified tags already exist in ECR
+#         type: boolean
+#       profile-name:
+#         default: default
+#         type: string
+#       repo:
+#         default: default
+#         type: string
+#       path:
+#         default: .
+#         type: string
+#       dockerfile:
+#         default: Dockerfile
+#         type: string
+#       extra-build-args:
+#         default: ''
+#         type: string
+#       no-output-timeout:
+#         default: 10m
+#         description: The amount of time to allow the docker command to run before timing out.
+#         type: string
+#     steps:
+#       - when:
+#           condition: <<parameters.checkout>>
+#           steps:
+#               - checkout
+#       - run:
+#           command: >
+#             registry_id=$(echo $<<parameters.account-url>> | sed "s;\..*;;g")
+
+#             number_of_tags_in_ecr=0
+
+
+#             docker_tag_args=""
+
+#             IFS="," read -ra DOCKER_TAGS \<<< "<< parameters.tag >>"
+
+#             for tag in "${DOCKER_TAGS[@]}"; do
+#               if [ "<<parameters.skip-when-tags-exist>>" = "true" ]; then
+#                 docker_tag_exists_in_ecr=$(aws ecr describe-images --profile <<parameters.profile-name>> --registry-id $registry_id --repository-name <<parameters.repo>> --query "contains(imageDetails[].imageTags[], '$tag')")
+#                 if [ "$docker_tag_exists_in_ecr" = "true" ]; then
+#                   docker pull $<<parameters.account-url>>/$<<parameters.repo>>:${tag}
+#                   let "number_of_tags_in_ecr+=1"
+#                 fi
+#               fi
+#               docker_tag_args="$docker_tag_args -t $<<parameters.account-url>>/$<<parameters.repo>>:$tag"
+#             done
+
+#             if [ "<<parameters.skip-when-tags-exist>>" = "false" ] || [
+#             "<<parameters.skip-when-tags-exist>>" = "true" -a $number_of_tags_in_ecr
+#             -lt ${#DOCKER_TAGS[@]} ]; then
+#               docker build \
+#                 <<#parameters.extra-build-args>><<parameters.extra-build-args>><</parameters.extra-build-args>> \
+#                 -f <<parameters.path>>/<<parameters.dockerfile>> \
+#                 $docker_tag_args \
+#                 <<parameters.path>>
+#             fi
+#           name: Build docker image
+#           no_output_timeout: <<parameters.no-output-timeout>>
+#   push-image:
+#     parameters:
+#       account-url:
+#         default: AWS_ECR_ACCOUNT_URL
+#         type: env_var_name
+#       repo:
+#         type: string
+#       tag:
+#         default: latest
+#         type: string
+#     steps:
+#       - run:
+#           command: |
+#             IFS="," read -ra DOCKER_TAGS \<<< "<< parameters.tag >>"
+#             for tag in "${DOCKER_TAGS[@]}"; do
+#               docker push $<<parameters.account-url>>/<<parameters.repo>>:<<parameters.tag>>
+#             done
+#           name: Push image to Amazon ECR
+
+# jobs:
+#   build-and-push-docker-image:
+#     executor: aws-ecr/default
+#     steps:
+#       - checkout
+#       - aws-cli/setup:
+#           configure-default-region: true
+#           configure-profile-region: true
+#       - aws-assume-role
+#       - build-image:
+#           skip-when-tags-exist: true
+#           repo: calvin
+#       # - push-image:
+#       #     repo: calvin
+#       #     tag: latest
+
+# workflows:
+#   build-and-push-to-ecr:
+#     jobs:
+#       - build-and-push-docker-image
