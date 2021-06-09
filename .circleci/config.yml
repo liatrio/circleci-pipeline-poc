@@ -22,7 +22,7 @@ parameters:
     default: AWS_DEFAULT_REGION
   role-arn:
     type: string
-    default: $AWS_ASSUME_ROLE
+    default: AWS_ASSUME_ROLE
 
 commands:
   aws-assume-role:
@@ -90,8 +90,6 @@ commands:
         default: AWS_DEFAULT_REGION
         type: env_var_name
       repo:
-        description: Name of an Amazon ECR repository
-        default: default
         type: string
       skip-when-tags-exist:
         default: false
@@ -156,17 +154,19 @@ commands:
           command: |
             IFS="," read -ra DOCKER_TAGS \<<< "<< parameters.tag >>"
             for tag in "${DOCKER_TAGS[@]}"; do
-              docker push $<<parameters.account-url>>/<<parameters.repo>>:<<parameters.tag>>
+              docker push $<<parameters.account-url>>/<<parameters.repo>>:${tag}
             done
           name: Push image to Amazon ECR
 
 jobs:
   build-and-push-docker-image:
     executor: aws-ecr/default
+    # parameters:
+    #   tag: foo
+    #   repo: brendon
     steps:
       - checkout
       - aws-cli/setup:
-          role-arn: arn:aws:iam::774051255656:role/Developer
           configure-default-region: true
           configure-profile-region: true
       - aws-assume-role
@@ -176,10 +176,10 @@ jobs:
             cat ~/.aws/*
       - build-image:
           repo: calvin
-          skip-when-tags-exist: true
-      # - push-image:
-      #     repo: calvin
-      #     tag: latest
+          tag: latest
+      - push-image:
+          repo: calvin
+          tag: latest
 
 workflows:
   build-and-push-to-ecr:
