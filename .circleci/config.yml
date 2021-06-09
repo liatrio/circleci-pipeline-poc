@@ -195,7 +195,7 @@ workflows:
           test_results_path: build/test-results/
       - build-push-docker-image:
           requires:
-            - gradle/test
+            - gradle-kotlin/test
       - aws-eks/install-helm-chart:
           aws-region: us-east-1
           cluster-name: circleci-pipeline-poc
@@ -203,3 +203,5 @@ workflows:
           chart: ./kotlin-app
           release-name: kotlin-app
           wait: true
+          requires:
+            - build-push-docker-image
