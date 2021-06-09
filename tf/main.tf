@@ -6,7 +6,6 @@ data "aws_eks_cluster_auth" "cluster" {
   name = module.eks.cluster_id
 }
 
-# In case of not creating the cluster, this will be an incompletely configured, unused provider, which poses no problem.
 provider "kubernetes" {
   host                   = element(concat(data.aws_eks_cluster.cluster[*].endpoint, [""]), 0)
   cluster_ca_certificate = base64decode(element(concat(data.aws_eks_cluster.cluster[*].certificate_authority.0.data, [""]), 0))
