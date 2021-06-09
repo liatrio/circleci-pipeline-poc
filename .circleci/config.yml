@@ -19,10 +19,10 @@ orbs:
 parameters:
   aws-access-key-id:
     type: string
-    default: AWS_ACCESS_KEY_ID
+    default: CONNOR_AWS_ACCESS_KEY_ID
   aws-secret-access-key:
     type: string
-    default: AWS_SECRET_ACCESS_KEY
+    default: CONNOR_AWS_SECRET_ACCESS_KEY
   account-url:
     default: AWS_ECR_ACCOUNT_URL
     type: string
@@ -178,10 +178,10 @@ jobs:
           configure-profile-region: true
       - aws-assume-role
       - build-image:
-          repo: calvin
+          repo: connor-circleci
           tag: latest,${CIRCLE_SHA1}
       - push-image:
-          repo: calvin
+          repo: connor-circleci
           tag: latest,${CIRCLE_SHA1}
 
 workflows:
