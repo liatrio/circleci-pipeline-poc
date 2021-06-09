@@ -166,7 +166,7 @@ jobs:
     steps:
       - checkout
       - aws-cli/setup:
-          role-arn: $AWS_ASSUME_ROLE
+          role-arn: arn:aws:iam::774051255656:role/Developer
           configure-default-region: true
           configure-profile-region: true
       - aws-assume-role
