@@ -16,7 +16,6 @@ parameters:
   account-url:
     default: AWS_ECR_ACCOUNT_URL
     type: string
-# AWS CLI setup vars
   region:
     type: string
     default: AWS_DEFAULT_REGION
@@ -41,7 +40,7 @@ commands:
         type: env_var_name
     steps:
       - run:
-          name: "Assume Specified Role."
+          name: Assume Specified Role
           command: |
             assumed_role=$(aws sts assume-role --role-arn $<<parameters.role-arn>> --role-session-name <<parameters.role-session-name>>)
             aws_access_key_id=$(echo $assumed_role | jq .Credentials.AccessKeyId | xargs)
@@ -138,7 +137,7 @@ commands:
                 $docker_tag_args \
                 <<parameters.path>>
             fi
-          name: Build docker image
+          name: Build Docker Image
           no_output_timeout: <<parameters.no-output-timeout>>
   push-image:
     parameters:
@@ -157,7 +156,7 @@ commands:
             for tag in "${DOCKER_TAGS[@]}"; do
               docker push $<<parameters.account-url>>/<<parameters.repo>>:${tag}
             done
-          name: Push image to Amazon ECR
+          name: Push Image to Amazon ECR
 
 jobs:
   build-and-push-docker-image:
@@ -168,10 +167,6 @@ jobs:
           configure-default-region: true
           configure-profile-region: true
       - aws-assume-role
-      - run:
-          name: "Check aws creds"
-          command: |
-            cat ~/.aws/*
       - build-image:
           repo: calvin
           tag: latest,${CIRCLE_SHA1}
