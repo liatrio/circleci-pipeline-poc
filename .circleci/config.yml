@@ -166,6 +166,7 @@ jobs:
     steps:
       - checkout
       - aws-cli/setup:
+          role-arn: AWS_ASSUME_ROLE
           configure-default-region: true
           configure-profile-region: true
       - aws-assume-role
