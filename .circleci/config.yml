@@ -192,4 +192,6 @@ workflows:
           cache_checksum_file: build.gradle.kts
           reports_path: build/reports/
           test_results_path: build/test-results/
-      # - build-push-docker-image
+      - build-push-docker-image:
+          requires:
+            - gradle/test
