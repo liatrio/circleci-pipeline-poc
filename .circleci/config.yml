@@ -3,6 +3,7 @@ description: |
   Build a Docker application and push to an ECR repository.
 
 orbs:
+  gradle: circleci/gradle@2.2.0
   aws-cli: circleci/aws-cli@2.0.2
   aws-ecr: circleci/aws-ecr@7.0.0
 
@@ -159,7 +160,7 @@ commands:
           name: Push Image to Amazon ECR
 
 jobs:
-  build-and-push-docker-image:
+  build-push-docker-image:
     executor: aws-ecr/default
     steps:
       - checkout
@@ -173,8 +174,16 @@ jobs:
       - push-image:
           repo: calvin
           tag: latest,${CIRCLE_SHA1}
-
+  gradle-test:
+    executor: gradle/default
+      tag: '8.0'
+    steps:
+      - gradle/test:
+          cache_checksum_file: build.gradle.kts
+          reports_path: build/reports/
+          test_results_path: build/test-results/
 workflows:
-  build-and-push-to-ecr:
+  kotlin-applications:
     jobs:
-      - build-and-push-docker-image
+      - gradle-test
+      # - build-push-docker-image
