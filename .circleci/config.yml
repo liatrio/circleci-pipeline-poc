@@ -207,7 +207,7 @@ jobs:
 
             pip3 install jq
 
-            assumed_role=$(aws sts assume-role --role-arn 774051255656 --role-session-name test)
+            assumed_role=$(aws sts assume-role --role-arn arn:aws:iam::774051255656:role/Developer --role-session-name test)
             aws_access_key_id=$(echo $assumed_role | jq .Credentials.AccessKeyId | xargs)
             aws_secret_access_key=$(echo $assumed_role | jq .Credentials.SecretAccessKey | xargs)
             aws_session_token=$(echo $assumed_role | jq .Credentials.SessionToken | xargs)
