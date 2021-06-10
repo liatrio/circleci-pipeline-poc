@@ -10,11 +10,16 @@ executors:
       tag:
         default: '8.0'
         type: string
+  helm-executor:
+    docker:
+      - image: 'circleci/python:3'
 
 orbs:
-  gradle: circleci/gradle@2.2.0
+  gradle-kotlin: circleci/gradle@2.2.0
   aws-cli: circleci/aws-cli@2.0.2
   aws-ecr: circleci/aws-ecr@7.0.0
+  aws-eks: circleci/aws-eks@0.2.3
+  helm: circleci/helm@1.2.0
 
 parameters:
   aws-access-key-id:
@@ -183,15 +188,32 @@ jobs:
       - push-image:
           repo: calvin
           tag: latest,${CIRCLE_SHA1}
+  deploy-helm-chart:
+    executor: helm-executor
+    steps:
+      - checkout
+      - aws-assume-role
+      - aws-eks/update-kubeconfig-with-authenticator:
+          aws-region: us-east-1
+          cluster-authentication-role-arn: AWS_ASSUME_ROLE
+          cluster-name: circleci-pipeline-poc
+      - helm/install-helm-chart:
+          chart: ./kotlin-app
+          namespace: default
+          release-name: kotlin-app
+          wait: true
 
 workflows:
   kotlin-application:
     jobs:
-      - gradle/test:
+      - gradle-kotlin/test:
           executor: gradle-test
           cache_checksum_file: build.gradle.kts
           reports_path: build/reports/
           test_results_path: build/test-results/
       - build-push-docker-image:
           requires:
-            - gradle/test
+            - gradle-kotlin/test
+      - deploy-helm-chart:
+          requires:
+            - build-push-docker-image
