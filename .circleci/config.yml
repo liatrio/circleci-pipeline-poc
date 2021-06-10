@@ -219,6 +219,9 @@ jobs:
 
             aws eks update-kubeconfig --name $CLUSTER_NAME
 
+            pip3 install pycurl
+            pycurl https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 | bash
+
             helm list -a
 
 
