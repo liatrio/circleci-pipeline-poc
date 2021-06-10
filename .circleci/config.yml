@@ -25,10 +25,10 @@ orbs:
 parameters:
   aws-access-key-id:
     type: string
-    default: CONNOR_AWS_ACCESS_KEY_ID
+    default: AWS_ACCESS_KEY_ID
   aws-secret-access-key:
     type: string
-    default: CONNOR_AWS_SECRET_ACCESS_KEY
+    default: AWS_SECRET_ACCESS_KEY
   account-url:
     default: AWS_ECR_ACCOUNT_URL
     type: string
@@ -174,8 +174,6 @@ commands:
             done
           name: Push Image to Amazon ECR
 
-
-
 jobs:
   build-push-docker-image:
     executor: aws-ecr/default
@@ -186,10 +184,10 @@ jobs:
           configure-profile-region: true
       - aws-assume-role
       - build-image:
-          repo: connor-circleci
+          repo: calvin
           tag: latest,${CIRCLE_SHA1}
       - push-image:
-          repo: connor-circleci
+          repo: calvin
           tag: latest,${CIRCLE_SHA1}
 
   deploy-helm-chart:
