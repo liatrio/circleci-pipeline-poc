@@ -191,14 +191,29 @@ jobs:
           tag: latest,${CIRCLE_SHA1}
 
   deploy-helm-chart:
-    executor: helm-executor
+    executor: aws-eks/python3
     steps:
       - checkout
       - aws-cli/setup:
           configure-default-region: true
           configure-profile-region: true
       - aws-assume-role
-      - install-aws-iam-authenticator
+      - aws-eks/install-aws-iam-authenticator
+      - 
+      # - aws-cli/setup:
+      #     configure-default-region: true
+      #     configure-profile-region: true
+      # - aws-assume-role
+      # - install-aws-iam-authenticator
+      # - aws-eks/update-kubeconfig-with-authenticator:
+      #     aws-region: us-east-1
+      #     cluster-authentication-role-arn: AWS_ASSUME_ROLE
+      #     cluster-name: circleci-pipeline-poc
+      # - helm/install-helm-chart:
+      #     chart: ./spring-boot-kotlin
+      #     namespace: default
+      #     release-name: spring-boot-kotlin
+      #     wait: true
 
 workflows:
   kotlin-application:
