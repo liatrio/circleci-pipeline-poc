@@ -175,6 +175,7 @@ commands:
           name: Push Image to Amazon ECR
 
 
+
 jobs:
   build-push-docker-image:
     executor: aws-ecr/default
@@ -185,10 +186,10 @@ jobs:
           configure-profile-region: true
       - aws-assume-role
       - build-image:
-          repo: calvin
+          repo: connor-circleci
           tag: latest,${CIRCLE_SHA1}
       - push-image:
-          repo: calvin
+          repo: connor-circleci
           tag: latest,${CIRCLE_SHA1}
 
   deploy-helm-chart:
@@ -198,7 +199,6 @@ jobs:
       - aws-cli/setup:
           configure-default-region: true
           configure-profile-region: true
-      - aws-assume-role
       - aws-eks/install-aws-iam-authenticator
       - run:
           command: |
@@ -206,7 +206,7 @@ jobs:
             AWS_REGION="us-east-1"
 
             pip3 install jq
-
+            
             assumed_role=$(aws sts assume-role --role-arn arn:aws:iam::774051255656:role/Developer --role-session-name test)
             aws_access_key_id=$(echo $assumed_role | jq .Credentials.AccessKeyId | xargs)
             aws_secret_access_key=$(echo $assumed_role | jq .Credentials.SecretAccessKey | xargs)
@@ -214,43 +214,30 @@ jobs:
             export AWS_ACCESS_KEY_ID=$aws_access_key_id
             export AWS_SECRET_ACCESS_KEY=$aws_secret_access_key
             export AWS_SESSION_TOKEN=$aws_session_token
-
             aws sts get-caller-identity
-
             aws eks update-kubeconfig --name $CLUSTER_NAME
 
-            pip3 install pycurl
-            pycurl https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 | bash
-
-            helm list -a
 
 
-      # - aws-cli/setup:
-      #     configure-default-region: true
-      #     configure-profile-region: true
-      # - aws-assume-role
-      # - install-aws-iam-authenticator
-      # - aws-eks/update-kubeconfig-with-authenticator:
-      #     aws-region: us-east-1
-      #     cluster-authentication-role-arn: AWS_ASSUME_ROLE
-      #     cluster-name: circleci-pipeline-poc
-      # - helm/install-helm-chart:
-      #     chart: ./spring-boot-kotlin
-      #     namespace: default
-      #     release-name: spring-boot-kotlin
-      #     wait: true
+      - helm/install-helm-chart:
+          helm-version: v3.6.0
+          chart: ./spring-boot-kotlin
+          namespace: default
+          release-name: spring-boot-kotlin
+          wait: true
+         
 
 workflows:
   kotlin-application:
     jobs:
-      - gradle/test:
-          executor: gradle-test
-          cache_checksum_file: build.gradle.kts
-          reports_path: build/reports/
-          test_results_path: build/test-results/
-      - build-push-docker-image:
-          requires:
-            - gradle/test
-      - deploy-helm-chart:
-          requires:
-            - build-push-docker-image
+      # - gradle/test:
+      #     executor: gradle-test
+      #     cache_checksum_file: build.gradle.kts
+      #     reports_path: build/reports/
+      #     test_results_path: build/test-results/
+      #- build-push-docker-image:
+      #    requires:
+       #     - gradle/test
+      - deploy-helm-chart
+          #requires:
+           # - build-push-docker-image
