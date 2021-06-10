@@ -67,7 +67,6 @@ commands:
             export AWS_SESSION_TOKEN=$aws_session_token
             aws sts get-caller-identity
             aws ecr get-login-password --region $<<parameters.aws-region>> | docker login --username AWS --password-stdin $<<parameters.account-url>>
-            aws eks update-kubeconfig --name circleci-pipeline-poc
   build-image:
     parameters:
       account-url:
@@ -197,6 +196,9 @@ jobs:
     executor: helm-executor
     steps:
       - checkout
+      - aws-cli/setup:
+        configure-default-region: true
+        configure-profile-region: true
       - aws-assume-role
       - aws-eks/update-kubeconfig-with-authenticator:
           aws-region: us-east-1
