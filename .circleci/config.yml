@@ -218,6 +218,10 @@ jobs:
             aws sts get-caller-identity
 
             aws eks update-kubeconfig --name $CLUSTER_NAME
+
+            helm list -a
+
+
       # - aws-cli/setup:
       #     configure-default-region: true
       #     configure-profile-region: true
