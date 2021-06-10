@@ -1,3 +1,5 @@
+data "aws_caller_identity" "current" {}
+
 data "aws_availability_zones" "zones" {
   filter {
     name   = "region-name"
@@ -35,16 +37,31 @@ module "vpc" {
 }
 
 module "eks" {
-  source          = "terraform-aws-modules/eks/aws"
-  cluster_version = "1.17"
-  cluster_name    = "circleci-pipeline-poc"
+  source           = "terraform-aws-modules/eks/aws"
+  cluster_version  = "1.17"
+  write_kubeconfig = false
+  cluster_name     = "circleci-pipeline-poc"
   tags = {
     Name      = "CircleCI Pipeline POC"
     ManagedBy = "Terraform"
     Source    = "https://github.com/liatrio/circleci-pipeline-poc"
+    Cluster   = "circleci-pipeline-poc"
   }
   vpc_id  = module.vpc.vpc_id
   subnets = concat(module.vpc.private_subnets, module.vpc.public_subnets)
+
+  map_roles = [
+    {
+      rolearn  = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/Administrator"
+      username = "administrator"
+      groups   = ["system:masters"]
+    },
+    {
+      rolearn  = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/Developer"
+      username = "developer"
+      groups   = ["system:masters"]
+    },
+  ]
 
   worker_groups = [
     {
@@ -52,5 +69,4 @@ module "eks" {
       asg_max_size  = 2
     }
   ]
-
 }
