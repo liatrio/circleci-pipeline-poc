@@ -219,12 +219,14 @@ jobs:
 
             cat ~/.kube/config
 
-      - helm/install-helm-chart:
-          helm-version: v3.6.0
-          chart: ./spring-boot-kotlin
-          namespace: default
-          release-name: spring-boot-kotlin
-          wait: true
+            kubectl get nodes
+
+      # - helm/install-helm-chart:
+      #     helm-version: v3.6.0
+      #     chart: ./spring-boot-kotlin
+      #     namespace: default
+      #     release-name: spring-boot-kotlin
+      #     wait: true
          
 
 workflows:
