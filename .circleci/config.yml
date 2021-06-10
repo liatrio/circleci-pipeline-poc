@@ -19,7 +19,7 @@ orbs:
   aws-cli: circleci/aws-cli@2.0.2
   aws-ecr: circleci/aws-ecr@7.0.0
   aws-eks: circleci/aws-eks@0.2.3
-  kubernetes: circleci/kubernetes@0.4.0
+  #kubernetes: circleci/kubernetes@0.4.0
   helm: circleci/helm@1.2.0
 
 parameters:
@@ -174,8 +174,6 @@ commands:
             done
           name: Push Image to Amazon ECR
 
-
-
 jobs:
   build-push-docker-image:
     executor: aws-ecr/default
@@ -186,10 +184,10 @@ jobs:
           configure-profile-region: true
       - aws-assume-role
       - build-image:
-          repo: connor-circleci
+          repo: calvin
           tag: latest,${CIRCLE_SHA1}
       - push-image:
-          repo: connor-circleci
+          repo: calvin
           tag: latest,${CIRCLE_SHA1}
 
   deploy-helm-chart:
@@ -224,14 +222,16 @@ jobs:
             curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
             chmod 700 kubectl
 
-            ./kubectl get nodes
+      #       ./kubectl get nodes
+      # - run:
+      #     command: |
 
-      # - helm/install-helm-chart:
-      #     helm-version: v3.6.0
-      #     chart: ./spring-boot-kotlin
-      #     namespace: default
-      #     release-name: spring-boot-kotlin
-      #     wait: true
+      - helm/install-helm-chart:
+          helm-version: v3.6.0
+          chart: ./spring-boot-kotlin
+          namespace: default
+          release-name: spring-boot-kotlin
+          wait: true
          
 
 workflows:
