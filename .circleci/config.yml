@@ -217,7 +217,7 @@ jobs:
             aws sts get-caller-identity
             aws eks update-kubeconfig --name $CLUSTER_NAME
 
-            cat ~/.kube/kubeconfig
+            cat ~/.kube/config
 
       - helm/install-helm-chart:
           helm-version: v3.6.0
