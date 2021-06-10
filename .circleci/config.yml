@@ -199,7 +199,6 @@ jobs:
           configure-profile-region: true
       - aws-assume-role
       - aws-eks/install-aws-iam-authenticator
-      - 
       # - aws-cli/setup:
       #     configure-default-region: true
       #     configure-profile-region: true
