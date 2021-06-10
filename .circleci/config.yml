@@ -174,6 +174,7 @@ commands:
             done
           name: Push Image to Amazon ECR
 
+
 jobs:
   build-push-docker-image:
     executor: aws-ecr/default
@@ -199,6 +200,11 @@ jobs:
           configure-profile-region: true
       - aws-assume-role
       - aws-eks/install-aws-iam-authenticator
+      - run:
+          command: |
+            CLUSTER_NAME="circleci-pipeline-poc"
+            AWS_REGION="us-east-1"
+            aws eks update-kubeconfig --name $CLUSTER_NAME
       # - aws-cli/setup:
       #     configure-default-region: true
       #     configure-profile-region: true
