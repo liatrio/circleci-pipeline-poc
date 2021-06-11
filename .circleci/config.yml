@@ -177,8 +177,6 @@ commands:
             done
           name: Push Image to Amazon ECR
 
-
-
 jobs:
   build-push-docker-image:
     executor: aws-ecr/default
@@ -223,36 +221,12 @@ jobs:
             curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
             echo "before kube cmd"
             chmod 700 kubectl
-            ./kubectl get nodes
-
-            cat /home/circleci/.kube/config
 
             curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3
             chmod 700 get_helm.sh
             ./get_helm.sh
 
-            echo "before helm cmd"
-            helm list -a
-            echo "after helm cmd"
-
             helm upgrade spring-boot-kotlin ./spring-boot-kotlin
-            export POD_NAME=$(kubectl get pods --namespace default -l "app.kubernetes.io/name=spring-boot-kotlin,app.kubernetes.io/instance=spring-boot-kotlin" -o jsonpath="{.items[0].metadata.name}")
-            ./kubectl --namespace default $POD_NAME 8080:8080
-
-      # ./kubectl describe pod spring-boot-kotlin-795b66c9bc-kvptn
-      #./kubectl --namespace default port-forward spring-boot-kotlin-795b66c9bc-kvptn 8080:8080
-
-            
-      #helm install spring-boot-kotlin ./spring-boot-kotlin 
-      # - helm/install-helm-chart:
-      #     helm-version: v3.6.0
-      #     chart: ./spring-boot-kotlin
-      #     namespace: default
-      #     release-name: spring-boot-kotlin
-      #     wait: true
-
-       
-         
 
 workflows:
   kotlin-application:
