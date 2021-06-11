@@ -15,10 +15,11 @@ executors:
       - image: 'circleci/python:3'
 
 orbs:
-  gradle-kotlin: circleci/gradle@2.2.0
+  gradle: circleci/gradle@2.2.0
   aws-cli: circleci/aws-cli@2.0.2
   aws-ecr: circleci/aws-ecr@7.0.0
   aws-eks: circleci/aws-eks@0.2.3
+  kubernetes: circleci/kubernetes@0.4.0
   helm: circleci/helm@1.2.0
 
 parameters:
@@ -37,6 +38,9 @@ parameters:
   role-arn:
     type: string
     default: AWS_ASSUME_ROLE
+  cert_data: 
+    type: string
+    default: CERT_AUTHORITY
 
 commands:
   aws-assume-role:
@@ -173,6 +177,8 @@ commands:
             done
           name: Push Image to Amazon ECR
 
+
+
 jobs:
   build-push-docker-image:
     executor: aws-ecr/default
@@ -188,6 +194,7 @@ jobs:
       - push-image:
           repo: calvin
           tag: latest,${CIRCLE_SHA1}
+
   deploy-helm-chart:
     executor: aws-eks/python3
     steps:
@@ -202,7 +209,7 @@ jobs:
             export AWS_REGION="us-east-1"
 
             pip3 install jq
-
+            
             assumed_role=$(aws sts assume-role --role-arn arn:aws:iam::774051255656:role/Developer --role-session-name test)
             aws_access_key_id=$(echo $assumed_role | jq .Credentials.AccessKeyId | xargs)
             aws_secret_access_key=$(echo $assumed_role | jq .Credentials.SecretAccessKey | xargs)
@@ -212,22 +219,49 @@ jobs:
             export AWS_SESSION_TOKEN=$aws_session_token
             aws sts get-caller-identity
             aws eks update-kubeconfig --name $CLUSTER_NAME
+            
+            curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+            echo "before kube cmd"
+            chmod 700 kubectl
+            ./kubectl get nodes
+
+            cat /home/circleci/.kube/config
 
             curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3
             chmod 700 get_helm.sh
             ./get_helm.sh
 
+            echo "before helm cmd"
+            helm list -a
+            echo "after helm cmd"
+
+            helm upgrade spring-boot-kotlin ./spring-boot-kotlin
+            ./kubectl describe pod spring-boot-kotlin-795b66c9bc-kvptn
+      #./kubectl --namespace default port-forward spring-boot-kotlin-795b66c9bc-kvptn 8080:8080
+
+            
+      #helm install spring-boot-kotlin ./spring-boot-kotlin 
+      # - helm/install-helm-chart:
+      #     helm-version: v3.6.0
+      #     chart: ./spring-boot-kotlin
+      #     namespace: default
+      #     release-name: spring-boot-kotlin
+      #     wait: true
+
+       
+         
+
 workflows:
   kotlin-application:
     jobs:
-      - gradle-kotlin/test:
-          executor: gradle-test
-          cache_checksum_file: build.gradle.kts
-          reports_path: build/reports/
-          test_results_path: build/test-results/
-      - build-push-docker-image
-          requires:
-            - gradle-kotlin/test
-      - deploy-helm-chart 
-          requires:
-            - build-push-docker-image
+      # - gradle/test:
+      #     executor: gradle-test
+      #     cache_checksum_file: build.gradle.kts
+      #     reports_path: build/reports/
+      #     test_results_path: build/test-results/
+      # - build-push-docker-image:
+      #    requires:
+      #      - gradle/test
+      - deploy-helm-chart
+          # requires:
+          #  - build-push-docker-image
