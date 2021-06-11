@@ -254,14 +254,14 @@ jobs:
 workflows:
   kotlin-application:
     jobs:
-      # - gradle/test:
-      #     executor: gradle-test
-      #     cache_checksum_file: build.gradle.kts
-      #     reports_path: build/reports/
-      #     test_results_path: build/test-results/
-      # - build-push-docker-image:
-      #    requires:
-      #      - gradle/test
+      - gradle/test:
+          executor: gradle-test
+          cache_checksum_file: build.gradle.kts
+          reports_path: build/reports/
+          test_results_path: build/test-results/
+      - build-push-docker-image:
+         requires:
+           - gradle/test
       - deploy-helm-chart
-          # requires:
-          #  - build-push-docker-image
+          requires:
+           - build-push-docker-image
