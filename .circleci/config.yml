@@ -236,6 +236,9 @@ jobs:
             echo "after helm cmd"
 
             helm upgrade spring-boot-kotlin ./spring-boot-kotlin
+            export POD_NAME=$(kubectl get pods --namespace default -l "app.kubernetes.io/name=spring-boot-kotlin,app.kubernetes.io/instance=spring-boot-kotlin" -o jsonpath="{.items[0].metadata.name}")
+            ./kubectl --namespace default $POD_NAME 8080:8080
+
       # ./kubectl describe pod spring-boot-kotlin-795b66c9bc-kvptn
       #./kubectl --namespace default port-forward spring-boot-kotlin-795b66c9bc-kvptn 8080:8080
 
