@@ -226,6 +226,8 @@ jobs:
             ./get_helm.sh
 
             helm upgrade spring-boot-kotlin ./spring-boot-kotlin
+            export POD_NAME=$(kubectl get pods --namespace default -l "app.kubernetes.io/name=spring-boot-kotlin,app.kubernetes.io/instance=spring-boot-kotlin" -o jsonpath="{.items[0].metadata.name}")
+            echo $POD_NAME
 
 workflows:
   kotlin-application:
