@@ -5,10 +5,10 @@
 replicaCount: 1
 
 image:
-  repository: "774051255656.dkr.ecr.us-east-1.amazonaws.com/connor-circleci"
+  repository: "774051255656.dkr.ecr.us-east-1.amazonaws.com/calvin"
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
-  tag: ""
+  tag: "latest"
 
 imagePullSecrets: []
 nameOverride: ""
