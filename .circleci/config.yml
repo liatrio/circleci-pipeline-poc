@@ -262,6 +262,6 @@ workflows:
       - build-push-docker-image:
          requires:
            - gradle/test
-      - deploy-helm-chart
+      - deploy-helm-chart:
           requires:
            - build-push-docker-image
