@@ -4,8 +4,6 @@ This proof of concept (POC) shows you how to configure a CircleCI pipeline for a
 
 ## Contents
 
-____
-
 * ### <a href="https://github.com/liatrio/circleci-pipeline-poc/blob/master/app_documentation.adoc" target="_top">Source Project Readme</a>
 
 * ### <a href="https://github.com/spring-guides/tut-spring-boot-kotlin" target="_top">Source Project Link</a>
