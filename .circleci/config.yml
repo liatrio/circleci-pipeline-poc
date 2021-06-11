@@ -219,7 +219,6 @@ jobs:
             aws eks update-kubeconfig --name $CLUSTER_NAME
             
             curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
-            echo "before kube cmd"
             chmod 700 kubectl
 
             curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3
