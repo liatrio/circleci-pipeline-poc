@@ -236,7 +236,7 @@ jobs:
             echo "after helm cmd"
 
             helm upgrade spring-boot-kotlin ./spring-boot-kotlin
-            ./kubectl describe pod spring-boot-kotlin-795b66c9bc-kvptn
+      # ./kubectl describe pod spring-boot-kotlin-795b66c9bc-kvptn
       #./kubectl --namespace default port-forward spring-boot-kotlin-795b66c9bc-kvptn 8080:8080
 
             
