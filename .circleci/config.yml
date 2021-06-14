@@ -38,6 +38,9 @@ parameters:
   role-arn:
     type: string
     default: AWS_ASSUME_ROLE
+  cert_data: 
+    type: string
+    default: CERT_AUTHORITY
 
 commands:
   aws-assume-role:
@@ -221,11 +224,9 @@ jobs:
             
             curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
             chmod 700 kubectl
-
             curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3
             chmod 700 get_helm.sh
             ./get_helm.sh
-
             helm upgrade <<parameters.app-name>> ./<<parameters.app-name>>
             export POD_NAME=$(./kubectl get pods --namespace default -l "app.kubernetes.io/name=<<parameters.app-name>>,app.kubernetes.io/instance=<<parameters.app-name>>" -o jsonpath="{.items[0].metadata.name}")
             echo $POD_NAME
