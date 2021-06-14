@@ -230,7 +230,7 @@ jobs:
             export POD_NAME=$(./kubectl get pods --namespace default -l "app.kubernetes.io/name=<<parameters.app-name>>,app.kubernetes.io/instance=<<parameters.app-name>>" -o jsonpath="{.items[0].metadata.name}")
             echo $POD_NAME
           name: Deploy to EKS
-
+ 
 workflows:
   kotlin-application:
     jobs:
