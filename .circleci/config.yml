@@ -85,5 +85,5 @@ workflows:
            - custom-orb/gradle-test
       - deploy-helm-chart:
           requires:
-           - build-push-docker-image
+           - custom-orb/build-push-docker-image
 
