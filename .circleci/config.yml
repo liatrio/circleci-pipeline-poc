@@ -3,13 +3,6 @@ description: |
   Build a Docker application and push to an ECR repository.
 
 executors:
-  gradle-test:
-    docker:
-      - image: 'cimg/openjdk:<<parameters.tag>>'
-    parameters:
-      tag:
-        default: '8.0'
-        type: string
   helm-executor:
     docker:
       - image: 'circleci/python:3'
@@ -126,7 +119,7 @@ workflows:
   kotlin-application:
     jobs:
       - custom-orb/gradle-test:
-          executor: gradle-test
+          executor: custom-orb/gradle-executor
           cache_checksum_file: build.gradle.kts
           reports_path: build/reports/
           test_results_path: build/test-results/
