@@ -132,7 +132,7 @@ workflows:
           test_results_path: build/test-results/
       - build-push-docker-image:
          requires:
-           - gradle/test
+           - custom-orb/gradle-test
       - deploy-helm-chart:
           requires:
            - build-push-docker-image
