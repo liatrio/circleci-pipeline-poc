@@ -32,22 +32,11 @@ parameters:
   role-arn:
     type: string
     default: AWS_ASSUME_ROLE
+  repo-name:
+    type: string
+    default: AWS_REPO
 
 jobs:
-  build-push-docker-image:
-    executor: aws-ecr/default
-    steps:
-      - checkout
-      - aws-cli/setup:
-          configure-default-region: true
-          configure-profile-region: true
-      - custom-orb/aws-assume-role
-      - aws-ecr/build-image:
-          repo: calvin
-          tag: latest,${CIRCLE_SHA1}
-      - aws-ecr/push-image:
-          repo: calvin
-          tag: latest,${CIRCLE_SHA1}
 
   deploy-helm-chart:
     executor: aws-eks/python3
@@ -56,7 +45,7 @@ jobs:
         default: spring-boot-kotlin
         type: string
       role-arn:
-        default: arn:aws:iam::774051255656:role/Developer
+        default: AWS_ASSUME_ROLE
         type: string
       cluster-name:
         default: circleci-pipeline-poc
@@ -90,8 +79,9 @@ workflows:
           cache_checksum_file: build.gradle.kts
           reports_path: build/reports/
           test_results_path: build/test-results/
-      - build-push-docker-image:
-         requires:
+      - custom-orb/build-push-docker-image:
+          executor: aws-ecr/default
+          requires:
            - custom-orb/gradle-test
       - deploy-helm-chart:
           requires:
