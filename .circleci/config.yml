@@ -46,7 +46,7 @@ workflows:
           test_results_path: build/test-results/
       - custom-orb/build-push-docker-image:
           executor: aws-ecr/default
-          repo-name: AWS_REPO
+          repo-name: $AWS_REPO
           requires:
            - custom-orb/gradle-test
       - custom-orb/deploy-helm-chart:
