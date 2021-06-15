@@ -35,6 +35,12 @@ parameters:
   repo:
     type: string
     default: calvin
+  app-name:
+    type: string
+    default: spring-boot-kotlin
+  cluster-name:
+    type: string
+    default: circleci-pipeline-poc
   
 workflows:
   kotlin-application:
@@ -50,5 +56,7 @@ workflows:
           requires:
            - custom-orb/gradle-test
       - custom-orb/deploy-helm-chart:
+          app-name: <<parameters.app-name>>
+          cluster-name: <<parameters.cluster-name>>
           requires:
            - custom-orb/build-push-docker-image
