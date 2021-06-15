@@ -34,7 +34,7 @@ parameters:
     default: AWS_ASSUME_ROLE
   repo-name:
     type: string
-    default: AWS_REPO
+    default: calvin
 
 jobs:
 
@@ -82,7 +82,7 @@ workflows:
           test_results_path: build/test-results/
       - custom-orb/build-push-docker-image:
           executor: aws-ecr/default
-          repo-name: <<parameters.repo-name>>
+          repo-name: calvin
           requires:
            - custom-orb/gradle-test
       - deploy-helm-chart:
