@@ -33,7 +33,7 @@ parameters:
     type: string
     default: AWS_ASSUME_ROLE
   repo-name:
-    type: env_var_name
+    type: string
     default: AWS_REPO
 
 jobs:
