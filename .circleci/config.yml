@@ -14,7 +14,7 @@ orbs:
   aws-eks: circleci/aws-eks@0.2.3
   kubernetes: circleci/kubernetes@0.4.0
   helm: circleci/helm@1.2.0
-  custom-orb: liatrio-poc/circleci-orb-poc@dev:alpha
+  custom-orb: liatrio-poc/circleci-orb-poc@dev:2b071ad
 
 parameters:
   aws-access-key-id:
@@ -34,7 +34,7 @@ parameters:
     default: AWS_ASSUME_ROLE
   repo:
     type: string
-    default: AWS_REPO
+    default: calvin
   
 workflows:
   kotlin-application:
