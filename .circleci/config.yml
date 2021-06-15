@@ -38,7 +38,7 @@ parameters:
   role-arn:
     type: string
     default: AWS_ASSUME_ROLE
-  cert_data: 
+  cert_data:
     type: string
     default: CERT_AUTHORITY
 
@@ -65,9 +65,9 @@ commands:
             aws_access_key_id=$(echo $assumed_role | jq .Credentials.AccessKeyId | xargs)
             aws_secret_access_key=$(echo $assumed_role | jq .Credentials.SecretAccessKey | xargs)
             aws_session_token=$(echo $assumed_role | jq .Credentials.SessionToken | xargs)
-            export AWS_ACCESS_KEY_ID=$aws_access_key_id
-            export AWS_SECRET_ACCESS_KEY=$aws_secret_access_key
-            export AWS_SESSION_TOKEN=$aws_session_token
+            echo "export AWS_ACCESS_KEY_ID=$aws_access_key_id" >> $BASH_ENV
+            echo "export AWS_SECRET_ACCESS_KEY=$aws_secret_access_key" >> $BASH_ENV
+            echo "export AWS_SESSION_TOKEN=$aws_session_token" >> $BASH_ENV
             aws sts get-caller-identity
             aws ecr get-login-password --region $<<parameters.aws-region>> | docker login --username AWS --password-stdin $<<parameters.account-url>>
   build-image:
@@ -133,7 +133,7 @@ commands:
             docker_tag_args=""
 
             IFS="," read -ra DOCKER_TAGS \<<< "<< parameters.tag >>"
-            
+
             for tag in "${DOCKER_TAGS[@]}"; do
               if [ "<<parameters.skip-when-tags-exist>>" = "true" ]; then
                 docker_tag_exists_in_ecr=$(aws ecr describe-images --profile <<parameters.profile-name>> --registry-id $registry_id --repository-name <<parameters.repo>> --query "contains(imageDetails[].imageTags[], '$tag')")
@@ -209,19 +209,11 @@ jobs:
           configure-default-region: true
           configure-profile-region: true
       - aws-eks/install-aws-iam-authenticator
+      - aws-assume-role
       - run:
           command: |
-            pip3 install jq
-            
-            assumed_role=$(aws sts assume-role --role-arn <<parameters.role-arn>> --role-session-name test)
-            aws_access_key_id=$(echo $assumed_role | jq .Credentials.AccessKeyId | xargs)
-            aws_secret_access_key=$(echo $assumed_role | jq .Credentials.SecretAccessKey | xargs)
-            aws_session_token=$(echo $assumed_role | jq .Credentials.SessionToken | xargs)
-            export AWS_ACCESS_KEY_ID=$aws_access_key_id
-            export AWS_SECRET_ACCESS_KEY=$aws_secret_access_key
-            export AWS_SESSION_TOKEN=$aws_session_token
             aws eks update-kubeconfig --name <<parameters.cluster-name>>
-            
+
             curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
             chmod 700 kubectl
             curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3
@@ -231,7 +223,7 @@ jobs:
             export POD_NAME=$(./kubectl get pods --namespace default -l "app.kubernetes.io/name=<<parameters.app-name>>,app.kubernetes.io/instance=<<parameters.app-name>>" -o jsonpath="{.items[0].metadata.name}")
             echo $POD_NAME
           name: Deploy to EKS
- 
+
 workflows:
   kotlin-application:
     jobs:
@@ -246,4 +238,4 @@ workflows:
       - deploy-helm-chart:
           requires:
            - build-push-docker-image
-           
+
