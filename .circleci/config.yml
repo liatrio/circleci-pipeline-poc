@@ -33,7 +33,7 @@ parameters:
     type: string
     default: AWS_ASSUME_ROLE
   repo-name:
-    type: string
+    type: env_var_name
     default: AWS_REPO
 
 jobs:
@@ -82,6 +82,7 @@ workflows:
           test_results_path: build/test-results/
       - custom-orb/build-push-docker-image:
           executor: aws-ecr/default
+          repo-name: <<parameters.repo-name>>
           requires:
            - custom-orb/gradle-test
       - deploy-helm-chart:
