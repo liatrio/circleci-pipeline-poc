@@ -38,7 +38,7 @@ parameters:
   role-arn:
     type: string
     default: AWS_ASSUME_ROLE
-  cert_data: 
+  cert_data:
     type: string
     default: CERT_AUTHORITY
 
@@ -65,115 +65,12 @@ commands:
             aws_access_key_id=$(echo $assumed_role | jq .Credentials.AccessKeyId | xargs)
             aws_secret_access_key=$(echo $assumed_role | jq .Credentials.SecretAccessKey | xargs)
             aws_session_token=$(echo $assumed_role | jq .Credentials.SessionToken | xargs)
-            export AWS_ACCESS_KEY_ID=$aws_access_key_id
-            export AWS_SECRET_ACCESS_KEY=$aws_secret_access_key
-            export AWS_SESSION_TOKEN=$aws_session_token
+            echo "export AWS_ACCESS_KEY_ID=$aws_access_key_id" >> $BASH_ENV
+            echo "export AWS_SECRET_ACCESS_KEY=$aws_secret_access_key" >> $BASH_ENV
+            echo "export AWS_SESSION_TOKEN=$aws_session_token" >> $BASH_ENV
+            source $BASH_ENV
             aws sts get-caller-identity
             aws ecr get-login-password --region $<<parameters.aws-region>> | docker login --username AWS --password-stdin $<<parameters.account-url>>
-  build-image:
-    parameters:
-      account-url:
-        default: AWS_ECR_ACCOUNT_URL
-        type: env_var_name
-      aws-access-key-id:
-        default: AWS_ACCESS_KEY_ID
-        type: env_var_name
-      aws-secret-access-key:
-        default: AWS_SECRET_ACCESS_KEY
-        type: env_var_name
-      dockerfile:
-        default: Dockerfile
-        description: Name of dockerfile to use. Defaults to Dockerfile.
-        type: string
-      ecr-login:
-        default: true
-        description: >
-          Boolean for whether or not to log in to ECR before building. Default is
-          false.
-        type: boolean
-      extra-build-args:
-        default: ''
-        type: string
-      no-output-timeout:
-        default: 10m
-        description: The amount of time to allow the docker command to run before timing out.
-        type: string
-      path:
-        default: .
-        type: string
-      profile-name:
-        default: default
-        type: string
-      region:
-        default: AWS_DEFAULT_REGION
-        type: env_var_name
-      repo:
-        type: string
-      # This won't work with role being passed in as a variable
-      skip-when-tags-exist:
-        default: false
-        description: Whether to skip image building if all specified tags already exist in ECR
-        type: boolean
-      tag:
-        default: latest
-        description: A comma-separated string containing docker image tags (default = latest)
-        type: string
-      checkout:
-        default: false
-        type: boolean
-    steps:
-      - when:
-          condition: <<parameters.checkout>>
-          steps:
-              - checkout
-      - run:
-          command: >
-            registry_id=$(echo $<<parameters.account-url>> | sed "s;\..*;;g")
-            number_of_tags_in_ecr=0
-            docker_tag_args=""
-
-            IFS="," read -ra DOCKER_TAGS \<<< "<< parameters.tag >>"
-            
-            for tag in "${DOCKER_TAGS[@]}"; do
-              if [ "<<parameters.skip-when-tags-exist>>" = "true" ]; then
-                docker_tag_exists_in_ecr=$(aws ecr describe-images --profile <<parameters.profile-name>> --registry-id $registry_id --repository-name <<parameters.repo>> --query "contains(imageDetails[].imageTags[], '$tag')")
-                if [ "$docker_tag_exists_in_ecr" = "true" ]; then
-                  docker pull $<<parameters.account-url>>/<<parameters.repo>>:${tag}
-                  let "number_of_tags_in_ecr+=1"
-                fi
-              fi
-              docker_tag_args="$docker_tag_args -t $<<parameters.account-url>>/<<parameters.repo>>:$tag"
-            done
-
-            if [ "<<parameters.skip-when-tags-exist>>" = "false" ] || [
-            "<<parameters.skip-when-tags-exist>>" = "true" -a $number_of_tags_in_ecr
-            -lt ${#DOCKER_TAGS[@]} ]; then
-              docker build \
-                <<#parameters.extra-build-args>><<parameters.extra-build-args>><</parameters.extra-build-args>> \
-                -f <<parameters.path>>/<<parameters.dockerfile>> \
-                $docker_tag_args \
-                <<parameters.path>>
-            fi
-          name: Build Docker Image
-          no_output_timeout: <<parameters.no-output-timeout>>
-  push-image:
-    parameters:
-      account-url:
-        default: AWS_ECR_ACCOUNT_URL
-        type: env_var_name
-      repo:
-        type: string
-      tag:
-        default: latest
-        type: string
-    steps:
-      - run:
-          command: |
-            IFS="," read -ra DOCKER_TAGS \<<< "<< parameters.tag >>"
-            for tag in "${DOCKER_TAGS[@]}"; do
-              docker push $<<parameters.account-url>>/<<parameters.repo>>:${tag}
-            done
-          name: Push Image to Amazon ECR
 
 jobs:
   build-push-docker-image:
@@ -184,10 +81,10 @@ jobs:
           configure-default-region: true
           configure-profile-region: true
       - aws-assume-role
-      - build-image:
+      - aws-ecr/build-image:
           repo: calvin
           tag: latest,${CIRCLE_SHA1}
-      - push-image:
+      - aws-ecr/push-image:
           repo: calvin
           tag: latest,${CIRCLE_SHA1}
 
@@ -209,19 +106,11 @@ jobs:
           configure-default-region: true
           configure-profile-region: true
       - aws-eks/install-aws-iam-authenticator
+      - aws-assume-role
       - run:
           command: |
-            pip3 install jq
-            
-            assumed_role=$(aws sts assume-role --role-arn <<parameters.role-arn>> --role-session-name test)
-            aws_access_key_id=$(echo $assumed_role | jq .Credentials.AccessKeyId | xargs)
-            aws_secret_access_key=$(echo $assumed_role | jq .Credentials.SecretAccessKey | xargs)
-            aws_session_token=$(echo $assumed_role | jq .Credentials.SessionToken | xargs)
-            export AWS_ACCESS_KEY_ID=$aws_access_key_id
-            export AWS_SECRET_ACCESS_KEY=$aws_secret_access_key
-            export AWS_SESSION_TOKEN=$aws_session_token
             aws eks update-kubeconfig --name <<parameters.cluster-name>>
-            
+
             curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
             chmod 700 kubectl
             curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3
@@ -231,7 +120,7 @@ jobs:
             export POD_NAME=$(./kubectl get pods --namespace default -l "app.kubernetes.io/name=<<parameters.app-name>>,app.kubernetes.io/instance=<<parameters.app-name>>" -o jsonpath="{.items[0].metadata.name}")
             echo $POD_NAME
           name: Deploy to EKS
- 
+
 workflows:
   kotlin-application:
     jobs:
@@ -246,4 +135,4 @@ workflows:
       - deploy-helm-chart:
           requires:
            - build-push-docker-image
-           
+
