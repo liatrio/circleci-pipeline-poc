@@ -1,10 +1,18 @@
-# CircleCI Terminology
+# CircleCI Usage / Overview
 
 ## About CircleCI
 CircleCI is a continuous integration and delivery platform that aids software teams by automating the build, test, and deploy process.
 
 ## What are Orbs? 
 CircleCI orbs are open-source, shareable packages of parameterizable reusable configuration elements, including jobs, commands, and executors. Use orbs to reduce configuration complexity and help you integrate with your software and services stack quickly and easily across many projects.
+
+## Private or Public Orbs. Which One to Choose?
+If you have a paid plan you can create private orbs; private orbs are organization-centric. Performance plan customers can create up to three private orbs, whereas scale plan customers can create an unlimited number of private orbs. Private orbs are restricted your organization's pipelines and furthermore, can only be viewed and used by members of your organization. Private
+orbs do not appear in CircleCI's Orb Registry.
+
+A public orb appears in the Orb Registry and is available to all CircleCI to use in their own configurations.
+
+There are no means of deleting an orb (public or private); an orb can only be unlisted. Note that unlisting an orb does not affect its ability to be referenced by name in builds or for its source to be viewed. 
 
 *What Orbs Were Used and Why?*
 
