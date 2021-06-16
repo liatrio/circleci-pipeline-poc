@@ -29,9 +29,6 @@ parameters:
   aws-secret-access-key:
     type: string
     default: AWS_SECRET_ACCESS_KEY
-  account-url:
-    default: AWS_ECR_ACCOUNT_URL
-    type: string
   role-arn:
     type: string
     default: AWS_ASSUME_ROLE
@@ -43,7 +40,7 @@ commands:
   aws-assume-role:
     parameters:
       account-url:
-        default: AWS_ECR_ACCOUNT_URL
+        default: AWS_ECR_ACCOUNT_URL_TEST
         type: env_var_name
       role-arn:
         default: AWS_ASSUME_ROLE
