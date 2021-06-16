@@ -124,9 +124,13 @@ workflows:
           reports_path: build/reports/
           test_results_path: build/test-results/
       - build-push-docker-image:
-         requires:
-           - gradle/test
+          requires:
+          - gradle/test
+          context:
+          - aws-sandbox
       - deploy-helm-chart:
           requires:
-           - build-push-docker-image
+          - build-push-docker-image
+          context:
+          - aws-sandbox
 
