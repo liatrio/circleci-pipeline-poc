@@ -8,11 +8,14 @@ This proof of concept (POC) shows you how to configure a CircleCI pipeline for a
 
 ## Contents
 
-* ### <a href="https://github.com/liatrio/circleci-pipeline-poc/blob/master/app_documentation.adoc" target="_top">Source Project Readme</a>
+* ### <a href="https://github.com/liatrio/circleci-pipeline-poc/blob/master/docs/app_documentation.adoc" target="_top">Source Project Readme</a>
 
 * ### <a href="https://github.com/spring-guides/tut-spring-boot-kotlin" target="_top">Source Project Link</a>
 
-* ### <a href="https://github.com/liatrio/circleci-pipeline-poc/blob/master/circleci_terminology.md" target="_top">CircleCI Usage / Overview</a>
+* ### <a href="https://github.com/liatrio/circleci-pipeline-poc/blob/master/docs/best_practices.md" target="_top">Orb Best Practices</a>
+
+* ### <a href="https://github.com/liatrio/circleci-pipeline-poc/blob/master/docs/persisting_data.md" target="_top">Persisting Data</a>
+
+* ### <a href="https://github.com/liatrio/circleci-pipeline-poc/blob/master/docs/circleci_terminology.md" target="_top">CircleCI Usage / Overview</a>
 
 * ### <a href="https://circleci.com/developer/orbs/orb/liatrio-poc/circleci-orb-poc" target="_top">POC Orb and Usage on CircleCI's Orb Registry</a>
-
