@@ -14,3 +14,5 @@ This proof of concept (POC) shows you how to configure a CircleCI pipeline for a
 
 * ### <a href="https://github.com/liatrio/circleci-pipeline-poc/blob/master/circleci_terminology.md" target="_top">Circle Terminology</a>
 
+* ### <a href="https://circleci.com/developer/orbs/orb/liatrio-poc/circleci-orb-poc" target="_top">POC Orb and Usage on CircleCI's Orb Registry</a>
+
