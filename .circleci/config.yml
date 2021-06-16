@@ -32,9 +32,6 @@ parameters:
   account-url:
     default: AWS_ECR_ACCOUNT_URL
     type: string
-  region:
-    type: string
-    default: AWS_DEFAULT_REGION
   role-arn:
     type: string
     default: AWS_ASSUME_ROLE
@@ -55,7 +52,7 @@ commands:
         default: default
         type: string
       aws-region:
-        default: AWS_DEFAULT_REGION
+        default: AWS_REGION
         type: env_var_name
     steps:
       - run:
