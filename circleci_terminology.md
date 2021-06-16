@@ -40,6 +40,25 @@ A command definition defines a sequence of steps as a map to be executed in a jo
 
 Workflows define a list of jobs and their run order. It is possible to run jobs concurrently, sequentially, on a schedule, or with a manual gate using an approval job.
 
+## Environment Variables
+
+CircleCI uses Bash, which follows the POSIX naming convention for environment variables. Valid characters include letters (uppercase and lowecase), digits, and the underscore. The first character of each environment variable must be a letter.
+
+**Order of Precedence**
+
+1. Environment variables declared [inside a shell command](https://circleci.com/docs/2.0/env-vars/?utm_medium=SEM&utm_source=gnb&utm_campaign=SEM-gb-DSA-Eng-uscan&utm_content=&utm_term=dynamicSearch-&gclid=CjwKCAjwwqaGBhBKEiwAMk-FtP2pJHZDeyiG2fVZvPpKvY22atmSQshCc4kODA2RV4uXxVwm_-iKZxoCr40QAvD_BwE#setting-an-environment-variable-in-a-shell-command) in a run step
+2. Environment variables declared with the environment key [for a run step](https://circleci.com/docs/2.0/env-vars/?utm_medium=SEM&utm_source=gnb&utm_campaign=SEM-gb-DSA-Eng-uscan&utm_content=&utm_term=dynamicSearch-&gclid=CjwKCAjwwqaGBhBKEiwAMk-FtP2pJHZDeyiG2fVZvPpKvY22atmSQshCc4kODA2RV4uXxVwm_-iKZxoCr40QAvD_BwE#setting-an-environment-variable-in-a-step)
+3. Environment variables set with the environment key [for a job](https://circleci.com/docs/2.0/env-vars/?utm_medium=SEM&utm_source=gnb&utm_campaign=SEM-gb-DSA-Eng-uscan&utm_content=&utm_term=dynamicSearch-&gclid=CjwKCAjwwqaGBhBKEiwAMk-FtP2pJHZDeyiG2fVZvPpKvY22atmSQshCc4kODA2RV4uXxVwm_-iKZxoCr40QAvD_BwE#setting-an-environment-variable-in-a-job)
+4. Special CircleCI environment variables defined in the [CircleCI Built-in Environment Variables](https://circleci.com/docs/2.0/env-vars/?utm_medium=SEM&utm_source=gnb&utm_campaign=SEM-gb-DSA-Eng-uscan&utm_content=&utm_term=dynamicSearch-&gclid=CjwKCAjwwqaGBhBKEiwAMk-FtP2pJHZDeyiG2fVZvPpKvY22atmSQshCc4kODA2RV4uXxVwm_-iKZxoCr40QAvD_BwE#built-in-environment-variables) section
+5. [Context](https://circleci.com/docs/2.0/contexts/) environment variables (assuming the user has access to the Context) 
+6. [Project-level environment variables](https://circleci.com/docs/2.0/env-vars/?utm_medium=SEM&utm_source=gnb&utm_campaign=SEM-gb-DSA-Eng-uscan&utm_content=&utm_term=dynamicSearch-&gclid=CjwKCAjwwqaGBhBKEiwAMk-FtP2pJHZDeyiG2fVZvPpKvY22atmSQshCc4kODA2RV4uXxVwm_-iKZxoCr40QAvD_BwE#setting-an-environment-variable-in-a-project) set on the Project Settings page
+
+*NOTE*: Environment variables declared inside a shell command run step will override environment variables declared with the environment and contexts keys. Environment variables added on the Contexts page will take precedence over variables added on the Project Settings page.
+
+**Security**
+
+Do not add secrets or keys inside the *.circleci/config.yml* file. The full text of *config.yml* is visible to developers with access to your project on CircleCI. Store secrets or keys in project or context settings in the CircleCI app. For more information, see [Encryption](https://circleci.com/docs/2.0/security/#encryption) section of the Security document.
+
 ## Parallelism
 
 The more tests your project has, the longer it will take for them to complete on a single machine. To reduce this time, you can run tests in parallel by spreading them across multiple separate executors. This requires specifying a parallelism level to define how many separate executors get spun up for the test job. Then, you can use either the CircleCI CLI to split test files, or use environment variables to configure each parallel machine individually.
