@@ -63,15 +63,16 @@ commands:
             echo "export AWS_SECRET_ACCESS_KEY=$aws_secret_access_key" >> $BASH_ENV
             echo "export AWS_SESSION_TOKEN=$aws_session_token" >> $BASH_ENV
             source $BASH_ENV
-            aws sts get-caller-identity
-            aws ecr get-login-password --region $<<parameters.aws-region>> | docker login --username AWS --password-stdin $<<parameters.account-url>>
 
 jobs:
   build-push-docker-image:
-    # parameters:
-    #   - account-url:
-    #     default: AWS_ECR_ACCOUNT_URL
-    #     type: env_var_name
+    parameters:
+      account-url:
+        default: AWS_ECR_ACCOUNT_URL
+        type: env_var_name
+      aws-region:
+        default: AWS_REGION
+        type: env_var_name
     executor: aws-ecr/default
     steps:
       - checkout
@@ -81,6 +82,9 @@ jobs:
             - .
       - aws-cli/setup
       - aws-assume-role
+      - run:
+          name: Docker Login
+          command: aws ecr get-login-password --region $<<parameters.aws-region>> | docker login --username AWS --password-stdin $<<parameters.account-url>>
       - aws-ecr/build-image:
           repo: calvin
           tag: latest,${CIRCLE_SHA1}
