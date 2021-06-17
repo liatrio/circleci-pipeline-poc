@@ -15,6 +15,9 @@ parameters:
   role-arn:
     type: string
     default: $AWS_ASSUME_ROLE
+  aws-region:
+    default: AWS_REGION
+    type: env_var_name
 
 
 executors:
@@ -49,9 +52,7 @@ commands:
       role-session-name:
         default: default
         type: string
-      aws-region:
-        default: AWS_REGION
-        type: env_var_name
+
     steps:
       - run:
           name: Assume Specified Role
@@ -67,13 +68,6 @@ commands:
 
 jobs:
   build-push-docker-image:
-    parameters:
-      account-url:
-        default: AWS_ECR_ACCOUNT_URL
-        type: env_var_name
-      aws-region:
-        default: AWS_REGION
-        type: env_var_name
     executor: aws-ecr/default
     steps:
       - checkout
@@ -85,7 +79,7 @@ jobs:
       - aws-assume-role
       - run:
           name: Docker Login
-          command: aws ecr get-login-password --region $<<parameters.aws-region>> | docker login --username AWS --password-stdin $<<parameters.account-url>>
+          command: aws ecr get-login-password --region <<pipeline.parameters.aws-region>> | docker login --username AWS --password-stdin <<pipelineparameters.account-url>>
       - aws-ecr/build-image:
           repo: calvin
           tag: latest,${CIRCLE_SHA1}
