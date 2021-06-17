@@ -3,29 +3,139 @@ description: |
   Build a Docker application and push to an ECR repository.
 
 executors:
+  gradle-test:
+    docker:
+      - image: 'cimg/openjdk:<<parameters.tag>>'
+    parameters:
+      tag:
+        default: '8.0'
+        type: string
   helm-executor:
     docker:
       - image: 'circleci/python:3'
 
 orbs:
+  gradle: circleci/gradle@2.2.0
+  aws-cli: circleci/aws-cli@2.0.2
   aws-ecr: circleci/aws-ecr@7.0.0
-  custom-orb: liatrio-poc/circleci-orb-poc@0.0.8
-  
+  aws-eks: circleci/aws-eks@0.2.3
+  kubernetes: circleci/kubernetes@0.4.0
+  helm: circleci/helm@1.2.0
+
+parameters:
+  aws-access-key-id:
+    type: string
+    default: AWS_ACCESS_KEY_ID
+  aws-secret-access-key:
+    type: string
+    default: AWS_SECRET_ACCESS_KEY
+  account-url:
+    default: AWS_ECR_ACCOUNT_URL
+    type: string
+  role-arn:
+    type: string
+    default: AWS_ASSUME_ROLE
+  cert_data:
+    type: string
+    default: CERT_AUTHORITY
+
+commands:
+  aws-assume-role:
+    parameters:
+      account-url:
+        default: AWS_ECR_ACCOUNT_URL
+        type: env_var_name
+      role-arn:
+        default: AWS_ASSUME_ROLE
+        type: env_var_name
+      role-session-name:
+        default: default
+        type: string
+      aws-region:
+        default: AWS_REGION
+        type: env_var_name
+    steps:
+      - run:
+          name: Assume Specified Role
+          command: |
+            assumed_role=$(aws sts assume-role --role-arn $<<parameters.role-arn>> --role-session-name <<parameters.role-session-name>>)
+            aws_access_key_id=$(echo $assumed_role | jq .Credentials.AccessKeyId | xargs)
+            aws_secret_access_key=$(echo $assumed_role | jq .Credentials.SecretAccessKey | xargs)
+            aws_session_token=$(echo $assumed_role | jq .Credentials.SessionToken | xargs)
+            echo "export AWS_ACCESS_KEY_ID=$aws_access_key_id" >> $BASH_ENV
+            echo "export AWS_SECRET_ACCESS_KEY=$aws_secret_access_key" >> $BASH_ENV
+            echo "export AWS_SESSION_TOKEN=$aws_session_token" >> $BASH_ENV
+            source $BASH_ENV
+            aws sts get-caller-identity
+            aws ecr get-login-password --region $<<parameters.aws-region>> | docker login --username AWS --password-stdin $<<parameters.account-url>>
+
+jobs:
+  build-push-docker-image:
+    executor: aws-ecr/default
+    steps:
+      - checkout
+      - persist_to_workspace:
+          root: .
+          paths:
+            - .
+      - aws-cli/setup:
+          configure-default-region: true
+          configure-profile-region: true
+      - aws-assume-role
+      - aws-ecr/build-image:
+          repo: calvin
+          tag: latest,${CIRCLE_SHA1}
+      - aws-ecr/push-image:
+          repo: calvin
+          tag: latest,${CIRCLE_SHA1}
+
+  deploy-helm-chart:
+    executor: aws-eks/python3
+    parameters:
+      app-name:
+        default: spring-boot-kotlin
+        type: string
+      role-arn:
+        default: arn:aws:iam::774051255656:role/Developer
+        type: string
+      cluster-name:
+        default: circleci-pipeline-poc
+        type: string
+    steps:
+      #- checkout
+      - attach_workspace:
+          at: .
+      - aws-cli/setup:
+          configure-default-region: true
+          configure-profile-region: true
+      - aws-eks/install-aws-iam-authenticator
+      - aws-assume-role
+      - run:
+          command: |
+            aws eks update-kubeconfig --name <<parameters.cluster-name>>
+
+            curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+            chmod 700 kubectl
+            curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3
+            chmod 700 get_helm.sh
+            ./get_helm.sh
+            helm upgrade <<parameters.app-name>> ./<<parameters.app-name>>
+            export POD_NAME=$(./kubectl get pods --namespace default -l "app.kubernetes.io/name=<<parameters.app-name>>,app.kubernetes.io/instance=<<parameters.app-name>>" -o jsonpath="{.items[0].metadata.name}")
+            echo $POD_NAME
+          name: Deploy to EKS
+
 workflows:
   kotlin-application:
     jobs:
-      - custom-orb/gradle-test:
-          executor: custom-orb/gradle-executor
+      - gradle/test:
+          executor: gradle-test
           cache_checksum_file: build.gradle.kts
           reports_path: build/reports/
           test_results_path: build/test-results/
-      - custom-orb/build-push-docker-image:
-          executor: aws-ecr/default
-          repo-name: $AWS_REPO
+      - build-push-docker-image:
+         requires:
+           - gradle/test
+      - deploy-helm-chart:
           requires:
-           - custom-orb/gradle-test
-      - custom-orb/deploy-helm-chart:
-          app-name: spring-boot-kotlin
-          cluster-name: circleci-pipeline-poc
-          requires:
-           - custom-orb/build-push-docker-image
+           - build-push-docker-image
+
