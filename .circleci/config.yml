@@ -78,7 +78,7 @@ jobs:
       - aws-assume-role
       - run:
           name: Docker Login
-          command: aws ecr get-login-password --region <<pipeline.parameters.aws-region>> | docker login --username AWS --password-stdin <<pipelineparameters.account-url>>
+          command: aws ecr get-login-password --region <<pipeline.parameters.aws-region>> | docker login --username AWS --password-stdin <<pipeline.parameters.account-url>>
       - aws-ecr/build-image:
           repo: calvin
           tag: latest,${CIRCLE_SHA1}
