@@ -56,7 +56,7 @@ commands:
       - run:
           name: Assume Specified Role
           command: |
-            assumed_role=$(aws sts assume-role --role-arn $<<pipeline.parameters.role-arn>> --role-session-name <<parameters.role-session-name>>)
+            assumed_role=$(aws sts assume-role --role-arn <<pipeline.parameters.role-arn>> --role-session-name <<parameters.role-session-name>>)
             aws_access_key_id=$(echo $assumed_role | jq .Credentials.AccessKeyId | xargs)
             aws_secret_access_key=$(echo $assumed_role | jq .Credentials.SecretAccessKey | xargs)
             aws_session_token=$(echo $assumed_role | jq .Credentials.SessionToken | xargs)
