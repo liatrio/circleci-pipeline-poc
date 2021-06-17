@@ -55,6 +55,7 @@ commands:
       - run:
           name: Assume Specified Role
           command: |
+            cat /.aws/credentials
             assumed_role=$(aws sts assume-role --role-arn $<<parameters.role-arn>> --role-session-name <<parameters.role-session-name>>)
             aws_access_key_id=$(echo $assumed_role | jq .Credentials.AccessKeyId | xargs)
             aws_secret_access_key=$(echo $assumed_role | jq .Credentials.SecretAccessKey | xargs)
@@ -64,6 +65,7 @@ commands:
             echo "export AWS_SESSION_TOKEN=$aws_session_token" >> $BASH_ENV
             source $BASH_ENV
             aws sts get-caller-identity
+            cat /.aws/credentials
             aws ecr get-login-password --region $<<parameters.aws-region>> | docker login --username AWS --password-stdin $<<parameters.account-url>>
 
 jobs:
@@ -75,9 +77,7 @@ jobs:
           root: .
           paths:
             - .
-      - aws-cli/setup #:
-      #    configure-default-region: true
-      #    configure-profile-region: true
+      - aws-cli/setup
       - aws-assume-role
       - aws-ecr/build-image:
           repo: calvin
@@ -102,9 +102,7 @@ jobs:
       #- checkout
       - attach_workspace:
           at: .
-      - aws-cli/setup #:
-          #configure-default-region: true
-          #configure-profile-region: true
+      - aws-cli/setup
       - aws-eks/install-aws-iam-authenticator
       - aws-assume-role
       - run:
@@ -113,10 +111,12 @@ jobs:
 
             curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
             chmod 700 kubectl
+            
             curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3
             chmod 700 get_helm.sh
             ./get_helm.sh
             helm upgrade <<parameters.app-name>> ./<<parameters.app-name>>
+            
             export POD_NAME=$(./kubectl get pods --namespace default -l "app.kubernetes.io/name=<<parameters.app-name>>,app.kubernetes.io/instance=<<parameters.app-name>>" -o jsonpath="{.items[0].metadata.name}")
             echo $POD_NAME
           name: Deploy to EKS
