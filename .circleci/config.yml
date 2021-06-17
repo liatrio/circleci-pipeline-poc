@@ -2,11 +2,6 @@ version: 2.1
 description: |
   Build a Docker application and push to an ECR repository.
 
-executors:
-  helm-executor:
-    docker:
-      - image: 'circleci/python:3'
-
 orbs:
   aws-ecr: circleci/aws-ecr@7.0.0
   custom-orb: liatrio-poc/circleci-orb-poc@0.0.8
