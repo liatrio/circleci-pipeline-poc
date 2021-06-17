@@ -55,7 +55,7 @@ commands:
       - run:
           name: Assume Specified Role
           command: |
-            cat /.aws/credentials
+            cat ~/.aws/credentials
             assumed_role=$(aws sts assume-role --role-arn $<<parameters.role-arn>> --role-session-name <<parameters.role-session-name>>)
             aws_access_key_id=$(echo $assumed_role | jq .Credentials.AccessKeyId | xargs)
             aws_secret_access_key=$(echo $assumed_role | jq .Credentials.SecretAccessKey | xargs)
@@ -65,7 +65,7 @@ commands:
             echo "export AWS_SESSION_TOKEN=$aws_session_token" >> $BASH_ENV
             source $BASH_ENV
             aws sts get-caller-identity
-            cat /.aws/credentials
+            cat ~/.aws/credentials
             aws ecr get-login-password --region $<<parameters.aws-region>> | docker login --username AWS --password-stdin $<<parameters.account-url>>
 
 jobs:
