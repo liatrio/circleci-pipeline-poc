@@ -95,7 +95,7 @@ jobs:
         default: spring-boot-kotlin
         type: string
       role-arn:
-        default: arn:aws:iam::774051255656:role/Developer
+        default: AWS_ASSUME_ROLE
         type: string
       cluster-name:
         default: circleci-pipeline-poc
@@ -135,4 +135,3 @@ workflows:
       - deploy-helm-chart:
           requires:
            - build-push-docker-image
-
