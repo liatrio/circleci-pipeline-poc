@@ -35,9 +35,6 @@ parameters:
   role-arn:
     type: string
     default: AWS_ASSUME_ROLE
-  cert_data:
-    type: string
-    default: CERT_AUTHORITY
 
 commands:
   aws-assume-role:
@@ -78,9 +75,9 @@ jobs:
           root: .
           paths:
             - .
-      - aws-cli/setup:
-          configure-default-region: true
-          configure-profile-region: true
+      - aws-cli/setup #:
+      #    configure-default-region: true
+      #    configure-profile-region: true
       - aws-assume-role
       - aws-ecr/build-image:
           repo: calvin
@@ -105,9 +102,9 @@ jobs:
       #- checkout
       - attach_workspace:
           at: .
-      - aws-cli/setup:
-          configure-default-region: true
-          configure-profile-region: true
+      - aws-cli/setup #:
+          #configure-default-region: true
+          #configure-profile-region: true
       - aws-eks/install-aws-iam-authenticator
       - aws-assume-role
       - run:
