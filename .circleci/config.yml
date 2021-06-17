@@ -19,8 +19,17 @@ parameters:
     type: string
     default: $AWS_REGION
   role-session-name:
-    default: default
     type: string
+    default: default
+  aws-repo:
+    type: string
+    default: $AWS_REPO
+  app-name:
+    type: string
+    default: $APP_NAME
+  cluster-name:
+    type: string
+    default: $CLUSTER_NAME
 
 executors:
   gradle-test:
@@ -46,7 +55,7 @@ commands:
       - run:
           name: Assume Specified Role
           command: |
-            assumed_role=$(aws sts assume-role --role-arn <<pipeline.parameters.role-arn>> --role-session-name <<parameters.role-session-name>>)
+            assumed_role=$(aws sts assume-role --role-arn <<pipeline.parameters.role-arn>> --role-session-name <<pipeline.parameters.role-session-name>>)
             aws_access_key_id=$(echo $assumed_role | jq .Credentials.AccessKeyId | xargs)
             aws_secret_access_key=$(echo $assumed_role | jq .Credentials.SecretAccessKey | xargs)
             aws_session_token=$(echo $assumed_role | jq .Credentials.SessionToken | xargs)
@@ -70,23 +79,15 @@ jobs:
           name: Docker Login
           command: aws ecr get-login-password --region <<pipeline.parameters.aws-region>> | docker login --username AWS --password-stdin <<pipeline.parameters.account-url>>
       - aws-ecr/build-image:
-          repo: calvin
+          repo: <<pipeline.parameters.aws-repo>>
           tag: latest,${CIRCLE_SHA1}
       - aws-ecr/push-image:
-          repo: calvin
+          repo: <<pipeline.parameters.aws-repo>>
           tag: latest,${CIRCLE_SHA1}
 
   deploy-helm-chart:
     executor: helm-executor
-    parameters:
-      app-name:
-        default: spring-boot-kotlin
-        type: string
-      cluster-name:
-        default: circleci-pipeline-poc
-        type: string
     steps:
-      #- checkout
       - attach_workspace:
           at: .
       - aws-cli/setup
@@ -94,17 +95,14 @@ jobs:
       - aws-assume-role
       - run:
           command: |
-            aws eks update-kubeconfig --name <<parameters.cluster-name>>
-
+            aws eks update-kubeconfig --name <<pipeline.parameters.cluster-name>>
             curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
             chmod 700 kubectl
-            
             curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3
             chmod 700 get_helm.sh
             ./get_helm.sh
-            helm upgrade <<parameters.app-name>> ./<<parameters.app-name>>
-            
-            export POD_NAME=$(./kubectl get pods --namespace default -l "app.kubernetes.io/name=<<parameters.app-name>>,app.kubernetes.io/instance=<<parameters.app-name>>" -o jsonpath="{.items[0].metadata.name}")
+            helm upgrade <<pipeline.parameters.app-name>> ./<<pipeline.parameters.app-name>>
+            export POD_NAME=$(./kubectl get pods --namespace default -l "app.kubernetes.io/name=<<pipeline.parameters.app-name>>,app.kubernetes.io/instance=<<pipeline.parameters.app-name>>" -o jsonpath="{.items[0].metadata.name}")
             echo $POD_NAME
           name: Deploy to EKS
 
