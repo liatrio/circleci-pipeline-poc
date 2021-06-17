@@ -2,117 +2,30 @@ version: 2.1
 description: |
   Build a Docker application and push to an ECR repository.
 
-parameters:
-  aws-access-key-id:
-    type: string
-    default: $AWS_ACCESS_KEY_ID
-  aws-secret-access-key:
-    type: string
-    default: $AWS_SECRET_ACCESS_KEY
-  account-url:
-    type: string
-    default: $AWS_ECR_ACCOUNT_URL
-  role-arn:
-    type: string
-    default: $AWS_ASSUME_ROLE
-  aws-region:
-    type: string
-    default: $AWS_REGION
-  role-session-name:
-    type: string
-    default: default
-  aws-repo:
-    type: string
-    default: $AWS_REPO
-  app-name:
-    type: string
-    default: $APP_NAME
-  cluster-name:
-    type: string
-    default: $CLUSTER_NAME
-
 executors:
-  gradle-test:
-    docker:
-      - image: 'cimg/openjdk:<<parameters.tag>>'
-    parameters:
-      tag:
-        default: '8.0'
-        type: string
   helm-executor:
     docker:
       - image: 'circleci/python:3'
 
 orbs:
-  gradle: circleci/gradle@2.2.0
-  aws-cli: circleci/aws-cli@2.0.2
   aws-ecr: circleci/aws-ecr@7.0.0
-  aws-eks: circleci/aws-eks@0.2.3
-
-commands:
-  aws-assume-role:
-    steps:
-      - run:
-          name: Assume Specified Role
-          command: |
-            assumed_role=$(aws sts assume-role --role-arn <<pipeline.parameters.role-arn>> --role-session-name <<pipeline.parameters.role-session-name>>)
-            aws_access_key_id=$(echo $assumed_role | jq .Credentials.AccessKeyId | xargs)
-            aws_secret_access_key=$(echo $assumed_role | jq .Credentials.SecretAccessKey | xargs)
-            aws_session_token=$(echo $assumed_role | jq .Credentials.SessionToken | xargs)
-            echo "export AWS_ACCESS_KEY_ID=$aws_access_key_id" >> $BASH_ENV
-            echo "export AWS_SECRET_ACCESS_KEY=$aws_secret_access_key" >> $BASH_ENV
-            echo "export AWS_SESSION_TOKEN=$aws_session_token" >> $BASH_ENV
-            source $BASH_ENV
-
-jobs:
-  build-push-docker-image:
-    executor: aws-ecr/default
-    steps:
-      - checkout
-      - persist_to_workspace:
-          root: .
-          paths:
-            - .
-      - aws-cli/setup
-      - aws-assume-role
-      - run:
-          name: Docker Login
-          command: aws ecr get-login-password --region <<pipeline.parameters.aws-region>> | docker login --username AWS --password-stdin <<pipeline.parameters.account-url>>
-      - aws-ecr/build-image:
-          repo: <<pipeline.parameters.aws-repo>>
-          tag: latest,${CIRCLE_SHA1}
-      - aws-ecr/push-image:
-          repo: <<pipeline.parameters.aws-repo>>
-          tag: latest,${CIRCLE_SHA1}
-
-  deploy-helm-chart:
-    executor: helm-executor
-    steps:
-      - attach_workspace:
-          at: .
-      - aws-cli/setup
-      - aws-eks/install-aws-iam-authenticator
-      - aws-assume-role
-      - run:
-          name: Deploy to EKS
-          command: |
-            aws eks update-kubeconfig --name <<pipeline.parameters.cluster-name>>
-            curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
-            chmod 700 kubectl
-            curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3
-            chmod 700 get_helm.sh
-            ./get_helm.sh
-            helm upgrade <<pipeline.parameters.app-name>> ./<<pipeline.parameters.app-name>>
+  custom-orb: liatrio-poc/circleci-orb-poc@dev:c69f007
 
 workflows:
   kotlin-application:
     jobs:
-      - gradle/test:
-          executor: gradle-test
+      - custom-orb/gradle-test:
+          executor: custom-orb/gradle-executor
           cache_checksum_file: build.gradle.kts
           reports_path: build/reports/
           test_results_path: build/test-results/
-      - build-push-docker-image
-      - deploy-helm-chart:
+      - custom-orb/build-push-docker-image:
+          executor: aws-ecr/default
+          repo-name: $AWS_REPO
           requires:
-           - build-push-docker-image
+           - custom-orb/gradle-test
+      - custom-orb/deploy-helm-chart:
+          app-name: spring-boot-kotlin
+          cluster-name: circleci-pipeline-poc
+          requires:
+           - custom-orb/build-push-docker-image
