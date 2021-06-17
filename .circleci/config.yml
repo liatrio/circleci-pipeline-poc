@@ -94,6 +94,7 @@ jobs:
       - aws-eks/install-aws-iam-authenticator
       - aws-assume-role
       - run:
+          name: Deploy to EKS
           command: |
             aws eks update-kubeconfig --name <<pipeline.parameters.cluster-name>>
             curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
@@ -102,9 +103,6 @@ jobs:
             chmod 700 get_helm.sh
             ./get_helm.sh
             helm upgrade <<pipeline.parameters.app-name>> ./<<pipeline.parameters.app-name>>
-            export POD_NAME=$(./kubectl get pods --namespace default -l "app.kubernetes.io/name=<<pipeline.parameters.app-name>>,app.kubernetes.io/instance=<<pipeline.parameters.app-name>>" -o jsonpath="{.items[0].metadata.name}")
-            echo $POD_NAME
-          name: Deploy to EKS
 
 workflows:
   kotlin-application:
