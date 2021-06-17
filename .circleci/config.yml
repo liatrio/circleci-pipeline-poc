@@ -34,7 +34,6 @@ jobs:
           command: |
               ./jfrog config add calvin-server-config --artifactory-url $ARTIFACTORY_URL --user $ARTIFACTORY_USER --apikey $ARTIFACTORY_APIKEY --interactive=false
 
-  
 workflows:
   kotlin-application:
     jobs:
