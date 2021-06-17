@@ -33,7 +33,7 @@ jobs:
           name: Push to Artifactory
           command: |
               ./jfrog config add calvin-server-config --artifactory-url $ARTIFACTORY_URL --user $ARTIFACTORY_USER --apikey $ARTIFACTORY_APIKEY --interactive=false
-
+              ./frog rt u /Results/tests circleci-artifacts --build-name=artifacts-build --build-number=$CIRCLE_BUILD_NUM
 workflows:
   kotlin-application:
     jobs:
@@ -42,7 +42,9 @@ workflows:
           cache_checksum_file: build.gradle.kts
           reports_path: build/reports/
           test_results_path: build/test-results/
-      - upload-artifact
+      - upload-artifact:
+          requires:
+            - custom-orb/gradle-test
       # - custom-orb/build-push-docker-image:
       #     executor: aws-ecr/default
       #     repo-name: $AWS_REPO
