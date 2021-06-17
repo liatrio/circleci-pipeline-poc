@@ -9,7 +9,7 @@ executors:
 
 orbs:
   aws-ecr: circleci/aws-ecr@7.0.0
-  custom-orb: liatrio-poc/circleci-orb-poc@0.0.8
+  custom-orb: liatrio-poc/circleci-orb-poc@0.1.0
   
 workflows:
   kotlin-application:
