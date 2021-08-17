@@ -19,13 +19,13 @@ workflows:
           cache_checksum_file: build.gradle.kts
           reports_path: build/reports/
           test_results_path: build/test-results/
-      - custom-orb/build-push-docker-image:
-          executor: aws-ecr/default
-          repo-name: $AWS_REPO
-          requires:
-           - custom-orb/gradle-test
-      - custom-orb/deploy-helm-chart:
-          app-name: spring-boot-kotlin
-          cluster-name: circleci-pipeline-poc
-          requires:
-           - custom-orb/build-push-docker-image
+      #- custom-orb/build-push-docker-image:
+      #    executor: aws-ecr/default
+      #    repo-name: $AWS_REPO
+      #    requires:
+      #     - custom-orb/gradle-test
+      #- custom-orb/deploy-helm-chart:
+      #    app-name: spring-boot-kotlin
+      #    cluster-name: circleci-pipeline-poc
+      #    requires:
+      #     - custom-orb/build-push-docker-image
